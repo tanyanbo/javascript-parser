@@ -6,6 +6,8 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^'.*'/d, "string"],
   [/^".*"/d, "string"],
   [/^;/d, ";"],
+  [/^\{/d, "{"],
+  [/^}/d, "}"],
 ];
 
 export class Tokenizer {

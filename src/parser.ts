@@ -1,5 +1,6 @@
 import { Tokenizer } from "./tokenizer";
 import { ASTNode, Token, TokenType } from "./types";
+import { astFactory } from "../helpers/ast-factory";
 
 export class Parser {
   #tokenizer: Tokenizer;
@@ -15,34 +16,55 @@ export class Parser {
   }
 
   #program(): ASTNode {
-    return {
-      type: "Program",
-      body: this.#statementList(),
-    };
+    return astFactory(this.#statementList());
   }
 
-  #statementList(): ASTNode[] {
-    const statements = [];
+  #statementList(block = false): (ASTNode | null)[] {
+    const statements: (ASTNode | null)[] = [];
+
+    if (block && this.#lookahead.type === "}") {
+      this.#eat("}");
+      return statements;
+    }
 
     let currentStatement = this.#statement();
 
-    while (currentStatement) {
-      statements.push(currentStatement);
-      currentStatement = this.#statement();
+    if (!currentStatement) {
+      return statements;
     }
+
+    do {
+      statements.push(currentStatement);
+      if (block && this.#lookahead.type === "}") {
+        this.#eat("}");
+        return statements;
+      }
+      currentStatement = this.#statement();
+    } while ((!block && currentStatement) || block);
 
     return statements;
   }
 
   #statement(): ASTNode | null {
-    if (this.#lookahead.type === "EndOfFile") {
-      return null;
+    switch (this.#lookahead.type) {
+      case "EndOfFile":
+        return null;
+      case "{":
+        this.#eat("{");
+        return this.#blockStatement();
+      default:
+        return this.#expressionStatement();
     }
-    return this.#expressionStatement();
   }
 
   #expressionStatement(): ASTNode {
-    return this.#literal();
+    const literalNode = this.#literal();
+
+    if (this.#lookahead.type === ";") {
+      this.#eat(";");
+    }
+
+    return literalNode;
   }
 
   #literal(): ASTNode {
@@ -51,20 +73,27 @@ export class Parser {
       case "number":
         result = {
           type: "NumericLiteral",
-          value: this.#lookahead.value,
+          value: +this.#lookahead.value,
         } as const;
         this.#eat("number");
         return result;
       case "string":
         result = {
           type: "StringLiteral",
-          value: this.#lookahead.value,
+          value: this.#lookahead.value.slice(1, -1),
         } as const;
         this.#eat("string");
         return result;
     }
 
     throw new Error("Invalid literal type");
+  }
+
+  #blockStatement(): ASTNode {
+    return {
+      type: "BlockStatement",
+      body: this.#statementList(true),
+    } as const;
   }
 
   #eat(type: TokenType) {
