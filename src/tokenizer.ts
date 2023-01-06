@@ -8,6 +8,9 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^;/d, ";"],
   [/^\{/d, "{"],
   [/^}/d, "}"],
+  [/^\*\*/d, "PowerOperator"],
+  [/^[+\-]/d, "AdditiveOperator"],
+  [/^[*\/]/d, "MultiplicativeOperator"],
 ];
 
 export class Tokenizer {

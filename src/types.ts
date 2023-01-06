@@ -5,6 +5,9 @@ export type TokenType =
   | ";"
   | "{"
   | "}"
+  | "AdditiveOperator"
+  | "MultiplicativeOperator"
+  | "PowerOperator"
   | null;
 
 export interface Token {
@@ -16,10 +19,16 @@ export type ASTNodeType =
   | "NumericLiteral"
   | "StringLiteral"
   | "BlockStatement"
+  | "BinaryExpression"
   | "Program";
+
+export type Operator = "+" | "-" | "*" | "/" | "**";
 
 export interface ASTNode {
   type: ASTNodeType;
   value?: any;
   body?: (ASTNode | null)[];
+  operator?: Operator;
+  left?: ASTNode;
+  right?: ASTNode;
 }

@@ -58,35 +58,77 @@ export class Parser {
   }
 
   #expressionStatement(): ASTNode {
-    const literalNode = this.#literal();
-
+    const node = this.#additiveExpression();
     if (this.#lookahead.type === ";") {
       this.#eat(";");
     }
+    return node;
+  }
 
-    return literalNode;
+  #additiveExpression(): ASTNode {
+    return this.#binaryExpression(
+      this.#multiplicativeExpression.bind(this),
+      "AdditiveOperator"
+    );
+  }
+
+  #multiplicativeExpression(): ASTNode {
+    return this.#binaryExpression(
+      this.#powerExpression.bind(this),
+      "MultiplicativeOperator"
+    );
+  }
+
+  #powerExpression(): ASTNode {
+    return this.#binaryExpression(this.#literal.bind(this), "PowerOperator");
+  }
+
+  #binaryExpression(
+    expression: (...args: any[]) => ASTNode,
+    lookaheadType: TokenType,
+    ...args: any[]
+  ) {
+    let left = expression(...args);
+    while (this.#lookahead.type === lookaheadType) {
+      const operator = this.#eat(lookaheadType).value;
+      const right = expression(...args);
+      left = {
+        type: "BinaryExpression",
+        left,
+        operator,
+        right,
+      };
+    }
+    return left;
   }
 
   #literal(): ASTNode {
-    let result;
     switch (this.#lookahead.type) {
       case "number":
-        result = {
-          type: "NumericLiteral",
-          value: +this.#lookahead.value,
-        } as const;
-        this.#eat("number");
-        return result;
+        return this.#numericLiteral();
       case "string":
-        result = {
-          type: "StringLiteral",
-          value: this.#lookahead.value.slice(1, -1),
-        } as const;
-        this.#eat("string");
-        return result;
+        return this.#stringLiteral();
     }
 
     throw new Error("Invalid literal type");
+  }
+
+  #numericLiteral(): ASTNode {
+    const node = this.#eat("number");
+
+    return {
+      type: "NumericLiteral",
+      value: +node.value,
+    };
+  }
+
+  #stringLiteral(): ASTNode {
+    const node = this.#eat("string");
+
+    return {
+      type: "StringLiteral",
+      value: node.value.slice(1, -1),
+    };
   }
 
   #blockStatement(): ASTNode {
