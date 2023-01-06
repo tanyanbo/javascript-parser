@@ -1,24 +1,13 @@
 import { Parser } from "./parser";
 
-// const str = `
-//   88
-//   'test'         ;
-//   {
-//   20
-//   }
-//   {
-//     'abc';
-//     {
-//       20
-//       30
-//       40
-//     }
-//   }
-//   `;
-
 const str = `
-  x += 20
-`;
+let x = 20
+x += 30;
+function testing(arg1) {
+  console.log(arg1);
+}
+testing(x)
+  `;
 
 const parser = new Parser(str);
 const ast = parser.parse();

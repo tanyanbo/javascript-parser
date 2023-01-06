@@ -299,18 +299,54 @@ export class Parser {
 
   #leftHandSideExpression(): ASTNode {
     const identifier = this.#identifier();
+    let maybeCallExpression: ASTNode | null;
     switch (this.#lookahead.type) {
       case ".":
         this.#eat(".");
         const property = this.#identifier();
-        return {
+        const node: ASTNode = {
           type: "MemberExpression",
           object: identifier,
           property,
         };
+        maybeCallExpression = this.#maybeCallExpression(node);
+        if (maybeCallExpression != null) {
+          return maybeCallExpression;
+        }
+        return node;
       default:
+        maybeCallExpression = this.#maybeCallExpression(identifier);
+        if (maybeCallExpression != null) {
+          return maybeCallExpression;
+        }
         return identifier;
     }
+  }
+
+  #maybeCallExpression(callee: ASTNode): ASTNode | null {
+    if (this.#lookahead.type === "(") {
+      this.#eat("(");
+      const args: ASTNode[] = [];
+      // @ts-ignore
+      while (this.#lookahead.type !== ")") {
+        args.push(this.#assignmentExpression());
+        // @ts-ignore
+        if (this.#lookahead.type === ",") {
+          this.#eat(",");
+        }
+      }
+      this.#eat(")");
+      if (this.#lookahead.type === ";") {
+        this.#eat(";");
+      }
+
+      return {
+        type: "CallExpression",
+        callee,
+        arguments: args,
+      };
+    }
+    return null;
   }
 
   #identifier(): ASTNode {

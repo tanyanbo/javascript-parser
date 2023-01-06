@@ -38,6 +38,7 @@ export type ASTNodeType =
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
+  | "CallExpression"
   | "IfStatement"
   | "Program";
 
@@ -66,4 +67,6 @@ export interface ASTNode {
   property?: ASTNode;
   condition?: ASTNode;
   params?: ASTNode[];
+  arguments?: ASTNode[];
+  callee?: ASTNode;
 }
