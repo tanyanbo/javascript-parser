@@ -8,6 +8,9 @@ export type TokenType =
   | "("
   | ")"
   | "."
+  | ","
+  | "function"
+  | "return"
   | "if"
   | "SquareBrackets"
   | "AdditiveOperator"
@@ -34,6 +37,7 @@ export type ASTNodeType =
   | "MemberExpression"
   | "Identifier"
   | "VariableDeclaration"
+  | "FunctionDeclaration"
   | "IfStatement"
   | "Program";
 
@@ -52,7 +56,7 @@ export type Operator =
 export interface ASTNode {
   type: ASTNodeType;
   value?: string | number | ASTNode;
-  body?: (ASTNode | null)[];
+  body?: (ASTNode | null)[] | ASTNode;
   operator?: Operator;
   left?: ASTNode;
   right?: ASTNode;
@@ -61,4 +65,5 @@ export interface ASTNode {
   object?: ASTNode;
   property?: ASTNode;
   condition?: ASTNode;
+  params?: ASTNode[];
 }

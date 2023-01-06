@@ -56,9 +56,50 @@ export class Parser {
         return this.#variableDeclaration();
       case "if":
         return this.#ifStatement();
+      case "function":
+        return this.#functionDeclaration();
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #functionDeclaration(): ASTNode {
+    this.#eat("function");
+    const id = this.#identifier();
+    const params = this.#functionParams();
+
+    this.#eat("{");
+    const body = this.#blockStatement();
+    return {
+      type: "FunctionDeclaration",
+      id,
+      params,
+      body,
+    };
+  }
+
+  #functionParams(): ASTNode[] {
+    this.#eat("(");
+    const params: ASTNode[] = [];
+
+    while (this.#lookahead.type === "Identifier") {
+      params.push({
+        type: "Identifier",
+        name: this.#eat("Identifier").value,
+      });
+      // @ts-ignore
+      if (this.#lookahead.type === ")") {
+        this.#eat(")");
+        break;
+      }
+      this.#eat(",");
+    }
+
+    if (params.length === 0 && this.#lookahead.type === ")") {
+      this.#eat(")");
+    }
+
+    return params;
   }
 
   #ifStatement(): ASTNode {
@@ -69,7 +110,7 @@ export class Parser {
 
     if (this.#lookahead.type === "{") {
       this.#eat("{");
-      const body = this.#blockStatement().body;
+      const body = this.#blockStatement();
       return {
         type: "IfStatement",
         condition,
@@ -81,7 +122,10 @@ export class Parser {
     return {
       type: "IfStatement",
       condition,
-      body: [body],
+      body: {
+        type: "BlockStatement",
+        body: [body],
+      },
     };
   }
 
@@ -281,7 +325,9 @@ export class Parser {
   #eat(type: TokenType): Token {
     const token = this.#lookahead;
     if (token.type !== type) {
-      throw new Error("Token does not match expected type");
+      throw new Error(
+        `Token does not match expected type. Expected: ${type} Got: ${token.type}`
+      );
     }
     this.#lookahead = this.#tokenizer.getNextToken();
     return token;

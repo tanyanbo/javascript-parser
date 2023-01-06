@@ -1,20 +1,21 @@
 import { Parser } from "../src/parser";
 import { astFactory } from "../helpers/ast-factory";
 
-describe("if statement", () => {
-  it("should parse an if statement with an empty body correctly", () => {
+describe("function declaration", () => {
+  it("should parse a function declaration with no arguments and no body", () => {
     const parser = new Parser(`
-      if (x) {}
+      function test() {}
     `);
     const ast = parser.parse();
     expect(ast).toEqual(
       astFactory([
         {
-          type: "IfStatement",
-          condition: {
+          type: "FunctionDeclaration",
+          id: {
             type: "Identifier",
-            name: "x",
+            name: "test",
           },
+          params: [],
           body: {
             type: "BlockStatement",
             body: [],
@@ -24,83 +25,79 @@ describe("if statement", () => {
     );
   });
 
-  it("should parse an if statement without {} correctly", () => {
+  it("should parse a function declaration with arguments correctly", () => {
     const parser = new Parser(`
-      if (x)
-        x = 20 
+      function test(a, b) {}
     `);
     const ast = parser.parse();
     expect(ast).toEqual(
       astFactory([
         {
-          type: "IfStatement",
-          condition: {
+          type: "FunctionDeclaration",
+          id: {
             type: "Identifier",
-            name: "x",
+            name: "test",
           },
+          params: [
+            {
+              type: "Identifier",
+              name: "a",
+            },
+            {
+              type: "Identifier",
+              name: "b",
+            },
+          ],
           body: {
             type: "BlockStatement",
-            body: [
-              {
-                type: "AssignmentExpression",
-                id: {
-                  type: "Identifier",
-                  name: "x",
-                },
-                operator: "=",
-                value: {
-                  type: "NumericLiteral",
-                  value: 20,
-                },
-              },
-            ],
+            body: [],
           },
         },
       ])
     );
   });
 
-  it("should parse an if statement with multiple statements in body correctly", () => {
+  it("should parse a function declaration with body correctly", () => {
     const parser = new Parser(`
-      if (x) {
-        x = 20 
-        y = 30
+      function test() {
+        const a = 10
+        a+=20
       }
     `);
     const ast = parser.parse();
     expect(ast).toEqual(
       astFactory([
         {
-          type: "IfStatement",
-          condition: {
+          type: "FunctionDeclaration",
+          id: {
             type: "Identifier",
-            name: "x",
+            name: "test",
           },
+          params: [],
           body: {
             type: "BlockStatement",
             body: [
               {
-                type: "AssignmentExpression",
+                type: "VariableDeclaration",
                 id: {
                   type: "Identifier",
-                  name: "x",
+                  name: "a",
                 },
-                operator: "=",
                 value: {
                   type: "NumericLiteral",
-                  value: 20,
+                  value: 10,
                 },
               },
               {
-                type: "AssignmentExpression",
+                type: "ComplexAssignmentExpression",
                 id: {
                   type: "Identifier",
-                  name: "y",
+                  name: "a",
                 },
-                operator: "=",
+                operator: "+=",
                 value: {
                   type: "NumericLiteral",
-                  value: 30,
+                  value: 20,
                 },
               },
             ],
