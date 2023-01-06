@@ -57,6 +57,13 @@ export class Parser {
     }
   }
 
+  #blockStatement(): ASTNode {
+    return {
+      type: "BlockStatement",
+      body: this.#statementList(true),
+    };
+  }
+
   #expressionStatement(): ASTNode {
     const node = this.#additiveExpression();
     if (this.#lookahead.type === ";") {
@@ -80,7 +87,10 @@ export class Parser {
   }
 
   #powerExpression(): ASTNode {
-    return this.#binaryExpression(this.#literal.bind(this), "PowerOperator");
+    return this.#binaryExpression(
+      this.#primaryExpression.bind(this),
+      "PowerOperator"
+    );
   }
 
   #binaryExpression(
@@ -102,15 +112,17 @@ export class Parser {
     return left;
   }
 
-  #literal(): ASTNode {
+  #primaryExpression(): ASTNode {
     switch (this.#lookahead.type) {
       case "number":
         return this.#numericLiteral();
       case "string":
         return this.#stringLiteral();
+      case "Identifier":
+        return this.#variable();
     }
 
-    throw new Error("Invalid literal type");
+    throw new Error(`Invalid primary expression. Got: ${this.#lookahead.type}`);
   }
 
   #numericLiteral(): ASTNode {
@@ -131,11 +143,13 @@ export class Parser {
     };
   }
 
-  #blockStatement(): ASTNode {
+  #variable(): ASTNode {
+    const node = this.#eat("Identifier");
+
     return {
-      type: "BlockStatement",
-      body: this.#statementList(true),
-    } as const;
+      type: "Identifier",
+      name: node.value,
+    };
   }
 
   #eat(type: TokenType) {

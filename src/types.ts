@@ -8,6 +8,7 @@ export type TokenType =
   | "AdditiveOperator"
   | "MultiplicativeOperator"
   | "PowerOperator"
+  | "Identifier"
   | null;
 
 export interface Token {
@@ -20,6 +21,7 @@ export type ASTNodeType =
   | "StringLiteral"
   | "BlockStatement"
   | "BinaryExpression"
+  | "Identifier"
   | "Program";
 
 export type Operator = "+" | "-" | "*" | "/" | "**";
@@ -31,4 +33,5 @@ export interface ASTNode {
   operator?: Operator;
   left?: ASTNode;
   right?: ASTNode;
+  name?: string;
 }
