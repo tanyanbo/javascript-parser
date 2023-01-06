@@ -17,7 +17,7 @@ import { Parser } from "./parser";
 //   `;
 
 const str = `
-  const x = a.b + 30 * b.c + d
+  x += 20
 `;
 
 const parser = new Parser(str);

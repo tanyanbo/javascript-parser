@@ -5,12 +5,16 @@ export type TokenType =
   | ";"
   | "{"
   | "}"
+  | "("
+  | ")"
   | "."
+  | "if"
   | "SquareBrackets"
   | "AdditiveOperator"
   | "MultiplicativeOperator"
   | "PowerOperator"
   | "AssignmentOperator"
+  | "ComplexAssignmentOperator"
   | "Identifier"
   | "VariableDeclaration"
   | null;
@@ -26,12 +30,24 @@ export type ASTNodeType =
   | "BlockStatement"
   | "BinaryExpression"
   | "AssignmentExpression"
+  | "ComplexAssignmentExpression"
   | "MemberExpression"
   | "Identifier"
   | "VariableDeclaration"
+  | "IfStatement"
   | "Program";
 
-export type Operator = "+" | "-" | "*" | "/" | "**";
+export type Operator =
+  | "+"
+  | "-"
+  | "*"
+  | "/"
+  | "**"
+  | "="
+  | "+="
+  | "-="
+  | "*="
+  | "/=";
 
 export interface ASTNode {
   type: ASTNodeType;
@@ -44,4 +60,5 @@ export interface ASTNode {
   id?: ASTNode;
   object?: ASTNode;
   property?: ASTNode;
+  condition?: ASTNode;
 }

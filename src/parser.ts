@@ -54,9 +54,35 @@ export class Parser {
         return this.#blockStatement();
       case "VariableDeclaration":
         return this.#variableDeclaration();
+      case "if":
+        return this.#ifStatement();
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #ifStatement(): ASTNode {
+    this.#eat("if");
+    this.#eat("(");
+    const condition = this.#expressionStatement();
+    this.#eat(")");
+
+    if (this.#lookahead.type === "{") {
+      this.#eat("{");
+      const body = this.#blockStatement().body;
+      return {
+        type: "IfStatement",
+        condition,
+        body,
+      };
+    }
+
+    const body = this.#expressionStatement();
+    return {
+      type: "IfStatement",
+      condition,
+      body: [body],
+    };
   }
 
   #blockStatement(): ASTNode {
@@ -106,16 +132,30 @@ export class Parser {
       return this.#additiveExpression();
     }
 
-    if (this.#lookahead.type === "AssignmentOperator") {
-      this.#eat("AssignmentOperator");
-      const value = this.#assignmentExpression();
-      return {
-        type: "AssignmentExpression",
-        id: maybeLeftHandSideExpression,
-        value,
-      };
-    } else {
-      return this.#additiveExpression(maybeLeftHandSideExpression);
+    let value: ASTNode;
+
+    switch (this.#lookahead.type) {
+      case "AssignmentOperator":
+        this.#eat("AssignmentOperator");
+        value = this.#assignmentExpression();
+        return {
+          type: "AssignmentExpression",
+          id: maybeLeftHandSideExpression,
+          operator: "=",
+          value,
+        };
+      case "ComplexAssignmentOperator":
+        const operator = this.#eat("ComplexAssignmentOperator")
+          .value as Operator;
+        value = this.#assignmentExpression();
+        return {
+          type: "ComplexAssignmentExpression",
+          id: maybeLeftHandSideExpression,
+          operator,
+          value,
+        };
+      default:
+        return this.#additiveExpression(maybeLeftHandSideExpression);
     }
   }
 

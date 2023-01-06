@@ -68,6 +68,30 @@ describe("variables", () => {
             type: "Identifier",
             name: "x",
           },
+          operator: "=",
+          value: {
+            type: "NumericLiteral",
+            value: 20,
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse complex variable redeclaration correctly", () => {
+    const parser = new Parser(`
+      x += 20
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "ComplexAssignmentExpression",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          operator: "+=",
           value: {
             type: "NumericLiteral",
             value: 20,
@@ -90,12 +114,14 @@ describe("variables", () => {
             type: "Identifier",
             name: "x",
           },
+          operator: "=",
           value: {
             type: "AssignmentExpression",
             id: {
               type: "Identifier",
               name: "y",
             },
+            operator: "=",
             value: {
               type: "NumericLiteral",
               value: 20,

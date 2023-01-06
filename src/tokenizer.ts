@@ -8,13 +8,17 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^;/d, ";"],
   [/^\{/d, "{"],
   [/^}/d, "}"],
+  [/^\(/d, "("],
+  [/^\)/d, ")"],
   [/^\./d, "."],
   [/^\[.*]/d, "SquareBrackets"],
   [/^\*\*/d, "PowerOperator"],
+  [/^=/d, "AssignmentOperator"],
+  [/^[+\-*/]=/d, "ComplexAssignmentOperator"],
   [/^[+\-]/d, "AdditiveOperator"],
   [/^[*\/]/d, "MultiplicativeOperator"],
-  [/^=/d, "AssignmentOperator"],
   [/^(?:let|const)/d, "VariableDeclaration"],
+  [/^if/d, "if"],
   [/^[a-zA-Z]\w*/d, "Identifier"],
 ];
 
