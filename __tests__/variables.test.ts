@@ -54,4 +54,55 @@ describe("variables", () => {
       ])
     );
   });
+
+  it("should parse variable redeclaration correctly", () => {
+    const parser = new Parser(`
+      x = 20
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "AssignmentExpression",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          value: {
+            type: "NumericLiteral",
+            value: 20,
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse chained variable redeclaration correctly", () => {
+    const parser = new Parser(`
+      x = y = 20
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "AssignmentExpression",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          value: {
+            type: "AssignmentExpression",
+            id: {
+              type: "Identifier",
+              name: "y",
+            },
+            value: {
+              type: "NumericLiteral",
+              value: 20,
+            },
+          },
+        },
+      ])
+    );
+  });
 });

@@ -5,15 +5,19 @@ export type TokenType =
   | ";"
   | "{"
   | "}"
+  | "."
+  | "SquareBrackets"
   | "AdditiveOperator"
   | "MultiplicativeOperator"
   | "PowerOperator"
+  | "AssignmentOperator"
   | "Identifier"
+  | "VariableDeclaration"
   | null;
 
 export interface Token {
   type: TokenType;
-  value?: any;
+  value: string;
 }
 
 export type ASTNodeType =
@@ -21,17 +25,23 @@ export type ASTNodeType =
   | "StringLiteral"
   | "BlockStatement"
   | "BinaryExpression"
+  | "AssignmentExpression"
+  | "MemberExpression"
   | "Identifier"
+  | "VariableDeclaration"
   | "Program";
 
 export type Operator = "+" | "-" | "*" | "/" | "**";
 
 export interface ASTNode {
   type: ASTNodeType;
-  value?: any;
+  value?: string | number | ASTNode;
   body?: (ASTNode | null)[];
   operator?: Operator;
   left?: ASTNode;
   right?: ASTNode;
   name?: string;
+  id?: ASTNode;
+  object?: ASTNode;
+  property?: ASTNode;
 }

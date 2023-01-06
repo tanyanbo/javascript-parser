@@ -1,5 +1,5 @@
 import { Tokenizer } from "./tokenizer";
-import { ASTNode, Token, TokenType } from "./types";
+import { ASTNode, Operator, Token, TokenType } from "./types";
 import { astFactory } from "../helpers/ast-factory";
 
 export class Parser {
@@ -52,6 +52,8 @@ export class Parser {
       case "{":
         this.#eat("{");
         return this.#blockStatement();
+      case "VariableDeclaration":
+        return this.#variableDeclaration();
       default:
         return this.#expressionStatement();
     }
@@ -65,42 +67,110 @@ export class Parser {
   }
 
   #expressionStatement(): ASTNode {
-    const node = this.#additiveExpression();
+    const node = this.#assignmentExpression();
     if (this.#lookahead.type === ";") {
       this.#eat(";");
     }
     return node;
   }
 
-  #additiveExpression(): ASTNode {
-    return this.#binaryExpression(
-      this.#multiplicativeExpression.bind(this),
-      "AdditiveOperator"
-    );
+  #variableDeclaration(): ASTNode {
+    this.#eat("VariableDeclaration");
+    const variableName: string = this.#eat("Identifier").value;
+
+    if (this.#lookahead.type !== "AssignmentOperator") {
+      return {
+        type: "VariableDeclaration",
+        id: {
+          type: "Identifier",
+          name: variableName,
+        },
+      };
+    }
+
+    this.#eat("AssignmentOperator");
+    const value = this.#assignmentExpression();
+    return {
+      type: "VariableDeclaration",
+      id: {
+        type: "Identifier",
+        name: variableName,
+      },
+      value,
+    };
   }
 
-  #multiplicativeExpression(): ASTNode {
-    return this.#binaryExpression(
-      this.#powerExpression.bind(this),
-      "MultiplicativeOperator"
-    );
+  #assignmentExpression(): ASTNode {
+    const maybeLeftHandSideExpression = this.#maybeLeftHandSideExpression();
+    if (maybeLeftHandSideExpression == null) {
+      return this.#additiveExpression();
+    }
+
+    if (this.#lookahead.type === "AssignmentOperator") {
+      this.#eat("AssignmentOperator");
+      const value = this.#assignmentExpression();
+      return {
+        type: "AssignmentExpression",
+        id: maybeLeftHandSideExpression,
+        value,
+      };
+    } else {
+      return this.#additiveExpression(maybeLeftHandSideExpression);
+    }
   }
 
-  #powerExpression(): ASTNode {
-    return this.#binaryExpression(
-      this.#primaryExpression.bind(this),
-      "PowerOperator"
-    );
+  #maybeLeftHandSideExpression(): ASTNode | null {
+    if (this.#lookahead.type === "Identifier") {
+      return this.#leftHandSideExpression();
+    }
+    return null;
   }
 
-  #binaryExpression(
-    expression: (...args: any[]) => ASTNode,
-    lookaheadType: TokenType,
-    ...args: any[]
-  ) {
-    let left = expression(...args);
+  #additiveExpression(left?: ASTNode): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#multiplicativeExpression.bind(this),
+      lookaheadType: "AdditiveOperator",
+      left,
+    });
+  }
+
+  #multiplicativeExpression(left?: ASTNode): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#powerExpression.bind(this),
+      lookaheadType: "MultiplicativeOperator",
+      left,
+    });
+  }
+
+  #powerExpression(left?: ASTNode): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#primaryExpression.bind(this),
+      lookaheadType: "PowerOperator",
+      left,
+    });
+  }
+
+  #binaryExpression({
+    expression,
+    lookaheadType,
+    left,
+    args,
+  }: {
+    expression: (...args: any[]) => ASTNode;
+    lookaheadType: TokenType;
+    left?: ASTNode;
+    args?: any[];
+  }) {
+    if (args == null) {
+      args = [];
+    }
+
+    if (left == null) {
+      left = expression(...args);
+    }
+
     while (this.#lookahead.type === lookaheadType) {
-      const operator = this.#eat(lookaheadType).value;
+      const operator = this.#eat(lookaheadType).value as Operator;
       const right = expression(...args);
       left = {
         type: "BinaryExpression",
@@ -119,7 +189,7 @@ export class Parser {
       case "string":
         return this.#stringLiteral();
       case "Identifier":
-        return this.#variable();
+        return this.#leftHandSideExpression();
     }
 
     throw new Error(`Invalid primary expression. Got: ${this.#lookahead.type}`);
@@ -143,7 +213,23 @@ export class Parser {
     };
   }
 
-  #variable(): ASTNode {
+  #leftHandSideExpression(): ASTNode {
+    const identifier = this.#identifier();
+    switch (this.#lookahead.type) {
+      case ".":
+        this.#eat(".");
+        const property = this.#identifier();
+        return {
+          type: "MemberExpression",
+          object: identifier,
+          property,
+        };
+      default:
+        return identifier;
+    }
+  }
+
+  #identifier(): ASTNode {
     const node = this.#eat("Identifier");
 
     return {
@@ -152,7 +238,7 @@ export class Parser {
     };
   }
 
-  #eat(type: TokenType) {
+  #eat(type: TokenType): Token {
     const token = this.#lookahead;
     if (token.type !== type) {
       throw new Error("Token does not match expected type");
