@@ -72,7 +72,7 @@ export class Parser {
     let init: ASTNode | null = null;
     switch (this.#lookahead.type) {
       case "VariableDeclaration":
-        init = this.#variableDeclaration();
+        init = this.#variableDeclaration(false);
         break;
       case "Identifier":
         init = this.#assignmentExpression();
@@ -191,15 +191,15 @@ export class Parser {
     };
   }
 
-  #expressionStatement(): ASTNode {
+  #expressionStatement(eatSemicolon: boolean = true): ASTNode {
     const node = this.#assignmentExpression();
-    if (this.#lookahead.type === ";") {
+    if (eatSemicolon && this.#lookahead.type === ";") {
       this.#eat(";");
     }
     return node;
   }
 
-  #variableDeclaration(): ASTNode {
+  #variableDeclaration(eatSemicolon: boolean = true): ASTNode {
     const kind = this.#eat("VariableDeclaration").value as "let" | "const";
     const variableName: string = this.#eat("Identifier").value;
 
@@ -215,7 +215,7 @@ export class Parser {
     }
 
     this.#eat("AssignmentOperator");
-    const value = this.#assignmentExpression();
+    const value = this.#expressionStatement(eatSemicolon);
     return {
       type: "VariableDeclaration",
       id: {
@@ -288,9 +288,23 @@ export class Parser {
 
   #powerExpression(): ASTNode {
     return this.#binaryExpression({
-      expression: this.#parenthesizedExpression.bind(this),
+      expression: this.#unaryExpression.bind(this),
       lookaheadType: "PowerOperator",
     });
+  }
+
+  #unaryExpression(): ASTNode {
+    if (this.#lookahead.type === "UnaryOperator") {
+      const operator = this.#eat("UnaryOperator").value as Operator;
+      const argument = this.#unaryExpression();
+      return {
+        type: "UnaryExpression",
+        operator,
+        argument,
+      };
+    }
+
+    return this.#parenthesizedExpression();
   }
 
   #parenthesizedExpression(): ASTNode {
@@ -341,6 +355,8 @@ export class Parser {
         return this.#numericLiteral();
       case "string":
         return this.#stringLiteral();
+      case "boolean":
+        return this.#booleanLiteral();
       case "Identifier":
         const lhs = this.#leftHandSideExpression();
         const maybeCallExpression = this.#maybeCallExpression(lhs);
@@ -368,6 +384,15 @@ export class Parser {
     return {
       type: "StringLiteral",
       value: node.value.slice(1, -1),
+    };
+  }
+
+  #booleanLiteral(): ASTNode {
+    const node = this.#eat("boolean");
+
+    return {
+      type: "BooleanLiteral",
+      value: Boolean(node.value),
     };
   }
 

@@ -109,4 +109,42 @@ describe("if statement", () => {
       ])
     );
   });
+
+  it("should parse an if statement with an expression for the condition", () => {
+    const parser = new Parser(`
+      if (1 + 1 === 2) {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "IfStatement",
+          condition: {
+            type: "BinaryExpression",
+            left: {
+              type: "BinaryExpression",
+              left: {
+                type: "NumericLiteral",
+                value: 1,
+              },
+              operator: "+",
+              right: {
+                type: "NumericLiteral",
+                value: 1,
+              },
+            },
+            operator: "===",
+            right: {
+              type: "NumericLiteral",
+              value: 2,
+            },
+          },
+          body: {
+            type: "BlockStatement",
+            body: [],
+          },
+        },
+      ])
+    );
+  });
 });

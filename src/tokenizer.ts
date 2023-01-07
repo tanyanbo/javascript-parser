@@ -14,10 +14,11 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^,/d, ","],
   [/^\[.*]/d, "SquareBrackets"],
   [/^\*\*/d, "PowerOperator"],
-  [/^(?:>|<|>=|<=)/d, "ComparisonOperator"],
-  [/^(?:==|===|!=|!==)/d, "EqualityOperator"],
+  [/^(?:>=|<=|>|<)/d, "ComparisonOperator"],
+  [/^(?:===|!==|==|!=)/d, "EqualityOperator"],
   [/^=/d, "AssignmentOperator"],
   [/^[+\-*/]=/d, "ComplexAssignmentOperator"],
+  [/^!/d, "UnaryOperator"],
   [/^[+\-]/d, "AdditiveOperator"],
   [/^[*\/]/d, "MultiplicativeOperator"],
   [/^(?:let|const)/d, "VariableDeclaration"],
@@ -26,6 +27,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^while/d, "while"],
   [/^function/d, "function"],
   [/^return/d, "return"],
+  [/^(?:true|false)/d, "boolean"],
   [/^[a-zA-Z]\w*/d, "Identifier"],
 ];
 

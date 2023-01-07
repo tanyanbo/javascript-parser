@@ -1,8 +1,16 @@
 import { Parser } from "./parser";
 
 const str = `
-for (;;)
-  console.log(i)
+let x = 10;
+function loop() {
+  for (let i = 0; i< 10; i += 1) {
+    x += 1
+    console.log(x)
+  }
+}
+
+if (1 + 1 === 2)
+  loop();
   `;
 
 const parser = new Parser(str);

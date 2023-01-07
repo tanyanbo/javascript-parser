@@ -15,6 +15,7 @@ export type TokenType =
   | "for"
   | "while"
   | "SquareBrackets"
+  | "UnaryOperator"
   | "AdditiveOperator"
   | "MultiplicativeOperator"
   | "PowerOperator"
@@ -24,6 +25,7 @@ export type TokenType =
   | "ComplexAssignmentOperator"
   | "Identifier"
   | "VariableDeclaration"
+  | "boolean"
   | null;
 
 export interface Token {
@@ -34,10 +36,12 @@ export interface Token {
 export type ASTNodeType =
   | "NumericLiteral"
   | "StringLiteral"
+  | "BooleanLiteral"
   | "BlockStatement"
   | "ForStatement"
   | "WhileStatement"
   | "BinaryExpression"
+  | "UnaryExpression"
   | "ParenthesizedExpression"
   | "AssignmentExpression"
   | "ComplexAssignmentExpression"
@@ -54,6 +58,7 @@ export type Operator =
   | "-"
   | "*"
   | "/"
+  | "!"
   | "**"
   | "="
   | "+="
@@ -71,7 +76,7 @@ export type Operator =
 
 export interface ASTNode {
   type: ASTNodeType;
-  value?: string | number | ASTNode;
+  value?: string | number | boolean | ASTNode;
   body?: (ASTNode | null)[] | ASTNode;
   operator?: Operator;
   left?: ASTNode;
@@ -88,4 +93,5 @@ export interface ASTNode {
   test?: ASTNode | null;
   update?: ASTNode | null;
   kind?: "let" | "const";
+  argument?: ASTNode;
 }

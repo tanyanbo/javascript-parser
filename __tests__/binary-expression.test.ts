@@ -156,4 +156,66 @@ describe("binary expression", () => {
       ])
     );
   });
+
+  it("should parse binary expression with equality operator correctly", () => {
+    const parser = new Parser(`
+      1 + 1 == 2
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "BinaryExpression",
+          left: {
+            type: "BinaryExpression",
+            left: {
+              type: "NumericLiteral",
+              value: 1,
+            },
+            operator: "+",
+            right: {
+              type: "NumericLiteral",
+              value: 1,
+            },
+          },
+          operator: "==",
+          right: {
+            type: "NumericLiteral",
+            value: 2,
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse binary expression with strict equality operator correctly", () => {
+    const parser = new Parser(`
+      1 + 1 === 2
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "BinaryExpression",
+          left: {
+            type: "BinaryExpression",
+            left: {
+              type: "NumericLiteral",
+              value: 1,
+            },
+            operator: "+",
+            right: {
+              type: "NumericLiteral",
+              value: 1,
+            },
+          },
+          operator: "===",
+          right: {
+            type: "NumericLiteral",
+            value: 2,
+          },
+        },
+      ])
+    );
+  });
 });
