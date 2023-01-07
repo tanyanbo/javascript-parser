@@ -34,7 +34,7 @@ describe("variables", () => {
 
   it("should parse a binary expression with a variable on both sides correctly", () => {
     const parser = new Parser(`
-      x + y
+      x * y
     `);
     const ast = parser.parse();
     expect(ast).toEqual(
@@ -45,7 +45,7 @@ describe("variables", () => {
             type: "Identifier",
             name: "x",
           },
-          operator: "+",
+          operator: "*",
           right: {
             type: "Identifier",
             name: "y",
@@ -103,7 +103,7 @@ describe("variables", () => {
 
   it("should parse chained variable redeclaration correctly", () => {
     const parser = new Parser(`
-      x = y = 20
+      x = y += 20
     `);
     const ast = parser.parse();
     expect(ast).toEqual(
@@ -116,12 +116,12 @@ describe("variables", () => {
           },
           operator: "=",
           value: {
-            type: "AssignmentExpression",
+            type: "ComplexAssignmentExpression",
             id: {
               type: "Identifier",
               name: "y",
             },
-            operator: "=",
+            operator: "+=",
             value: {
               type: "NumericLiteral",
               value: 20,
@@ -130,5 +130,12 @@ describe("variables", () => {
         },
       ])
     );
+  });
+
+  it("should throw when left hand side of assignment operator is invalid", () => {
+    const parser = new Parser(`
+      x() = 20
+    `);
+    expect(parser.parse).toThrow();
   });
 });

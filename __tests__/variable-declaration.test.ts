@@ -24,6 +24,36 @@ describe("variable declaration", () => {
     );
   });
 
+  it("should parse a variable declaration with another variable correctly", () => {
+    const parser = new Parser(`
+      const x = b + 20
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          value: {
+            type: "BinaryExpression",
+            left: {
+              type: "Identifier",
+              name: "b",
+            },
+            operator: "+",
+            right: {
+              type: "NumericLiteral",
+              value: 20,
+            },
+          },
+        },
+      ])
+    );
+  });
+
   it("should parse a variable declaration with an expression correctly", () => {
     const parser = new Parser(`
       const x = 20 + 30 
@@ -70,5 +100,12 @@ describe("variable declaration", () => {
         },
       ])
     );
+  });
+
+  it("should throw when left hand side of assignment operator is invalid", () => {
+    const parser = new Parser(`
+      const x() = 20
+    `);
+    expect(parser.parse).toThrow();
   });
 });

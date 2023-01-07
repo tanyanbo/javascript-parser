@@ -171,43 +171,50 @@ export class Parser {
   }
 
   #assignmentExpression(): ASTNode {
-    const maybeLeftHandSideExpression = this.#maybeLeftHandSideExpression();
-    if (maybeLeftHandSideExpression == null) {
-      return this.#additiveExpression();
-    }
+    let id = this.#equalityExpression();
 
-    let value: ASTNode;
+    if (
+      this.#lookahead.type === "AssignmentOperator" ||
+      this.#lookahead.type === "ComplexAssignmentOperator"
+    ) {
+      const operator = this.#eat(this.#lookahead.type);
+      let value = this.#assignmentExpression();
 
-    switch (this.#lookahead.type) {
-      case "AssignmentOperator":
-        this.#eat("AssignmentOperator");
-        value = this.#assignmentExpression();
-        return {
-          type: "AssignmentExpression",
-          id: maybeLeftHandSideExpression,
-          operator: "=",
-          value,
-        };
-      case "ComplexAssignmentOperator":
-        const operator = this.#eat("ComplexAssignmentOperator")
-          .value as Operator;
-        value = this.#assignmentExpression();
-        return {
-          type: "ComplexAssignmentExpression",
-          id: maybeLeftHandSideExpression,
-          operator,
-          value,
-        };
-      default:
-        return this.#additiveExpression(maybeLeftHandSideExpression);
+      if (!this.#checkIsValidLeftHandSide(id)) {
+        throw new Error("Not valid left hand side of assignment operator");
+      }
+
+      id = {
+        type:
+          operator.type === "AssignmentOperator"
+            ? "AssignmentExpression"
+            : "ComplexAssignmentExpression",
+        id,
+        operator: operator.value as Operator,
+        value,
+      };
     }
+    return id;
   }
 
-  #maybeLeftHandSideExpression(): ASTNode | null {
-    if (this.#lookahead.type === "Identifier") {
-      return this.#leftHandSideExpression();
-    }
-    return null;
+  #checkIsValidLeftHandSide(left: ASTNode): boolean {
+    return left.type === "Identifier" || left.type === "MemberExpression";
+  }
+
+  #equalityExpression(left?: ASTNode): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#comparisonExpression.bind(this),
+      lookaheadType: "EqualityOperator",
+      left,
+    });
+  }
+
+  #comparisonExpression(left?: ASTNode): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#additiveExpression.bind(this),
+      lookaheadType: "ComparisonOperator",
+      left,
+    });
   }
 
   #additiveExpression(left?: ASTNode): ASTNode {
@@ -287,7 +294,12 @@ export class Parser {
       case "string":
         return this.#stringLiteral();
       case "Identifier":
-        return this.#leftHandSideExpression();
+        const lhs = this.#leftHandSideExpression();
+        const maybeCallExpression = this.#maybeCallExpression(lhs);
+        if (maybeCallExpression != null) {
+          return maybeCallExpression;
+        }
+        return lhs;
     }
 
     throw new Error(`Invalid primary expression. Got: ${this.#lookahead.type}`);
@@ -313,26 +325,16 @@ export class Parser {
 
   #leftHandSideExpression(): ASTNode {
     const identifier = this.#identifier();
-    let maybeCallExpression: ASTNode | null;
     switch (this.#lookahead.type) {
       case ".":
         this.#eat(".");
         const property = this.#identifier();
-        const node: ASTNode = {
+        return {
           type: "MemberExpression",
           object: identifier,
           property,
         };
-        maybeCallExpression = this.#maybeCallExpression(node);
-        if (maybeCallExpression != null) {
-          return maybeCallExpression;
-        }
-        return node;
       default:
-        maybeCallExpression = this.#maybeCallExpression(identifier);
-        if (maybeCallExpression != null) {
-          return maybeCallExpression;
-        }
         return identifier;
     }
   }
@@ -364,9 +366,9 @@ export class Parser {
       if (maybeCallExpression == null) {
         return callExpressionNode;
       }
-
       return maybeCallExpression;
     }
+
     return null;
   }
 

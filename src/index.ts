@@ -1,7 +1,7 @@
 import { Parser } from "./parser";
 
 const str = `
-10 * (2 + 5)
+test() = 20
   `;
 
 const parser = new Parser(str);

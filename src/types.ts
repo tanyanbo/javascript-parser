@@ -12,11 +12,15 @@ export type TokenType =
   | "function"
   | "return"
   | "if"
+  | "for"
+  | "while"
   | "SquareBrackets"
   | "AdditiveOperator"
   | "MultiplicativeOperator"
   | "PowerOperator"
   | "AssignmentOperator"
+  | "ComparisonOperator"
+  | "EqualityOperator"
   | "ComplexAssignmentOperator"
   | "Identifier"
   | "VariableDeclaration"
@@ -31,6 +35,8 @@ export type ASTNodeType =
   | "NumericLiteral"
   | "StringLiteral"
   | "BlockStatement"
+  | "ForStatement"
+  | "WhileStatement"
   | "BinaryExpression"
   | "ParenthesizedExpression"
   | "AssignmentExpression"
@@ -53,7 +59,15 @@ export type Operator =
   | "+="
   | "-="
   | "*="
-  | "/=";
+  | "/="
+  | "<"
+  | ">"
+  | "<="
+  | ">="
+  | "=="
+  | "!="
+  | "==="
+  | "!==";
 
 export interface ASTNode {
   type: ASTNodeType;
@@ -70,4 +84,7 @@ export interface ASTNode {
   params?: ASTNode[];
   arguments?: ASTNode[];
   callee?: ASTNode;
+  init?: ASTNode;
+  test?: ASTNode;
+  update?: ASTNode;
 }
