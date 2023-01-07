@@ -87,6 +87,7 @@ describe("function declaration", () => {
                   type: "NumericLiteral",
                   value: 10,
                 },
+                kind: "const",
               },
               {
                 type: "ComplexAssignmentExpression",

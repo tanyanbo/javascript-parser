@@ -1,7 +1,8 @@
 import { Parser } from "./parser";
 
 const str = `
-test() = 20
+for (;;)
+  console.log(i)
   `;
 
 const parser = new Parser(str);

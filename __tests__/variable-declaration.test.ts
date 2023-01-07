@@ -19,6 +19,7 @@ describe("variable declaration", () => {
             type: "NumericLiteral",
             value: 20,
           },
+          kind: "const",
         },
       ])
     );
@@ -49,6 +50,7 @@ describe("variable declaration", () => {
               value: 20,
             },
           },
+          kind: "const",
         },
       ])
     );
@@ -79,6 +81,7 @@ describe("variable declaration", () => {
               value: 30,
             },
           },
+          kind: "const",
         },
       ])
     );
@@ -97,6 +100,7 @@ describe("variable declaration", () => {
             type: "Identifier",
             name: "x",
           },
+          kind: "let",
         },
       ])
     );

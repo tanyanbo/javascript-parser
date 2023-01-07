@@ -91,6 +91,7 @@ describe("calling a function", () => {
               value: 20,
             },
           },
+          kind: "const",
         },
       ])
     );

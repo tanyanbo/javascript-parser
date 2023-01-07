@@ -58,9 +58,64 @@ export class Parser {
         return this.#ifStatement();
       case "function":
         return this.#functionDeclaration();
+      case "for":
+        return this.#forStatement();
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #forStatement(): ASTNode {
+    this.#eat("for");
+    this.#eat("(");
+
+    let init: ASTNode | null = null;
+    switch (this.#lookahead.type) {
+      case "VariableDeclaration":
+        init = this.#variableDeclaration();
+        break;
+      case "Identifier":
+        init = this.#assignmentExpression();
+        break;
+    }
+
+    this.#eat(";");
+    let test: ASTNode | null = null;
+    if (this.#lookahead.type !== ";") {
+      test = this.#assignmentExpression();
+    }
+    this.#eat(";");
+
+    let update: ASTNode | null = null;
+    if (this.#lookahead.type !== ")") {
+      update = this.#assignmentExpression();
+    }
+    this.#eat(")");
+
+    let body: ASTNode | null;
+    switch (this.#lookahead.type) {
+      case "{":
+        this.#eat("{");
+        body = this.#blockStatement();
+        break;
+      default:
+        body = {
+          type: "BlockStatement",
+          body: [this.#statement()],
+        };
+    }
+
+    if (body == null) {
+      throw new Error("No body in for loop");
+    }
+
+    return {
+      type: "ForStatement",
+      init,
+      test,
+      update,
+      body,
+    };
   }
 
   #functionDeclaration(): ASTNode {
@@ -118,7 +173,7 @@ export class Parser {
       };
     }
 
-    const body = this.#expressionStatement();
+    const body = this.#statement();
     return {
       type: "IfStatement",
       condition,
@@ -145,7 +200,7 @@ export class Parser {
   }
 
   #variableDeclaration(): ASTNode {
-    this.#eat("VariableDeclaration");
+    const kind = this.#eat("VariableDeclaration").value as "let" | "const";
     const variableName: string = this.#eat("Identifier").value;
 
     if (this.#lookahead.type !== "AssignmentOperator") {
@@ -155,6 +210,7 @@ export class Parser {
           type: "Identifier",
           name: variableName,
         },
+        kind,
       };
     }
 
@@ -167,6 +223,7 @@ export class Parser {
         name: variableName,
       },
       value,
+      kind,
     };
   }
 
@@ -201,43 +258,38 @@ export class Parser {
     return left.type === "Identifier" || left.type === "MemberExpression";
   }
 
-  #equalityExpression(left?: ASTNode): ASTNode {
+  #equalityExpression(): ASTNode {
     return this.#binaryExpression({
       expression: this.#comparisonExpression.bind(this),
       lookaheadType: "EqualityOperator",
-      left,
     });
   }
 
-  #comparisonExpression(left?: ASTNode): ASTNode {
+  #comparisonExpression(): ASTNode {
     return this.#binaryExpression({
       expression: this.#additiveExpression.bind(this),
       lookaheadType: "ComparisonOperator",
-      left,
     });
   }
 
-  #additiveExpression(left?: ASTNode): ASTNode {
+  #additiveExpression(): ASTNode {
     return this.#binaryExpression({
       expression: this.#multiplicativeExpression.bind(this),
       lookaheadType: "AdditiveOperator",
-      left,
     });
   }
 
-  #multiplicativeExpression(left?: ASTNode): ASTNode {
+  #multiplicativeExpression(): ASTNode {
     return this.#binaryExpression({
       expression: this.#powerExpression.bind(this),
       lookaheadType: "MultiplicativeOperator",
-      left,
     });
   }
 
-  #powerExpression(left?: ASTNode): ASTNode {
+  #powerExpression(): ASTNode {
     return this.#binaryExpression({
       expression: this.#parenthesizedExpression.bind(this),
       lookaheadType: "PowerOperator",
-      left,
     });
   }
 
@@ -258,21 +310,17 @@ export class Parser {
   #binaryExpression({
     expression,
     lookaheadType,
-    left,
     args,
   }: {
     expression: (...args: any[]) => ASTNode;
     lookaheadType: TokenType;
-    left?: ASTNode;
     args?: any[];
   }) {
     if (args == null) {
       args = [];
     }
 
-    if (left == null) {
-      left = expression(...args);
-    }
+    let left = expression(...args);
 
     while (this.#lookahead.type === lookaheadType) {
       const operator = this.#eat(lookaheadType).value as Operator;

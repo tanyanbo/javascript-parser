@@ -84,7 +84,8 @@ export interface ASTNode {
   params?: ASTNode[];
   arguments?: ASTNode[];
   callee?: ASTNode;
-  init?: ASTNode;
-  test?: ASTNode;
-  update?: ASTNode;
+  init?: ASTNode | null;
+  test?: ASTNode | null;
+  update?: ASTNode | null;
+  kind?: "let" | "const";
 }
