@@ -32,6 +32,7 @@ export type ASTNodeType =
   | "StringLiteral"
   | "BlockStatement"
   | "BinaryExpression"
+  | "ParenthesizedExpression"
   | "AssignmentExpression"
   | "ComplexAssignmentExpression"
   | "MemberExpression"

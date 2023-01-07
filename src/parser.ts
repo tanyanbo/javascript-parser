@@ -228,10 +228,24 @@ export class Parser {
 
   #powerExpression(left?: ASTNode): ASTNode {
     return this.#binaryExpression({
-      expression: this.#primaryExpression.bind(this),
+      expression: this.#parenthesizedExpression.bind(this),
       lookaheadType: "PowerOperator",
       left,
     });
+  }
+
+  #parenthesizedExpression(): ASTNode {
+    if (this.#lookahead.type === "(") {
+      this.#eat("(");
+      const node = this.#assignmentExpression();
+      this.#eat(")");
+      return {
+        type: "ParenthesizedExpression",
+        body: node,
+      };
+    }
+
+    return this.#primaryExpression();
   }
 
   #binaryExpression({
@@ -340,11 +354,18 @@ export class Parser {
         this.#eat(";");
       }
 
-      return {
+      const callExpressionNode: ASTNode = {
         type: "CallExpression",
         callee,
         arguments: args,
       };
+
+      const maybeCallExpression = this.#maybeCallExpression(callExpressionNode);
+      if (maybeCallExpression == null) {
+        return callExpressionNode;
+      }
+
+      return maybeCallExpression;
     }
     return null;
   }

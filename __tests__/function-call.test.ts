@@ -123,4 +123,41 @@ describe("calling a function", () => {
       ])
     );
   });
+
+  it("should parse chained function calls correctly", () => {
+    const parser = new Parser(`
+      test(1)(a)()
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "CallExpression",
+          callee: {
+            type: "CallExpression",
+            callee: {
+              type: "CallExpression",
+              callee: {
+                type: "Identifier",
+                name: "test",
+              },
+              arguments: [
+                {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+              ],
+            },
+            arguments: [
+              {
+                type: "Identifier",
+                name: "a",
+              },
+            ],
+          },
+          arguments: [],
+        },
+      ])
+    );
+  });
 });

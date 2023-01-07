@@ -1,12 +1,7 @@
 import { Parser } from "./parser";
 
 const str = `
-let x = 20
-x += 30;
-function testing(arg1) {
-  console.log(arg1);
-}
-testing(x)
+10 * (2 + 5)
   `;
 
 const parser = new Parser(str);
