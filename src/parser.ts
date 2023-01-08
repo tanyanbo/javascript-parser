@@ -1,6 +1,7 @@
 import { Tokenizer } from "./tokenizer";
-import { ASTNode, Operator, Token, TokenType } from "./types";
+import { ASTNode, ASTNodeType, Operator, Token, TokenType } from "./types";
 import { astFactory } from "../helpers/ast-factory";
+import errorMessage from "../helpers/error-message";
 
 export class Parser {
   #tokenizer: Tokenizer;
@@ -16,10 +17,10 @@ export class Parser {
   }
 
   #program(): ASTNode {
-    return astFactory(this.#statementList());
+    return astFactory(this.#statementList("Program"));
   }
 
-  #statementList(block = false): (ASTNode | null)[] {
+  #statementList(type: ASTNodeType, block = false): (ASTNode | null)[] {
     const statements: (ASTNode | null)[] = [];
 
     if (block && this.#lookahead.type === "}") {
@@ -27,7 +28,7 @@ export class Parser {
       return statements;
     }
 
-    let currentStatement = this.#statement();
+    let currentStatement = this.#statement(type);
 
     if (!currentStatement) {
       return statements;
@@ -39,19 +40,19 @@ export class Parser {
         this.#eat("}");
         return statements;
       }
-      currentStatement = this.#statement();
+      currentStatement = this.#statement(type);
     } while ((!block && currentStatement) || block);
 
     return statements;
   }
 
-  #statement(): ASTNode | null {
+  #statement(type: ASTNodeType): ASTNode | null {
     switch (this.#lookahead.type) {
       case "EndOfFile":
         return null;
       case "{":
         this.#eat("{");
-        return this.#blockStatement();
+        return this.#blockStatement(type);
       case "VariableDeclaration":
         return this.#variableDeclaration();
       case "if":
@@ -60,9 +61,25 @@ export class Parser {
         return this.#functionDeclaration();
       case "for":
         return this.#forStatement();
+      case "return":
+        return this.#returnStatement(type);
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #returnStatement(type: ASTNodeType): ASTNode {
+    if (type !== "FunctionDeclaration") {
+      throw new Error(errorMessage.INVALID_RETURN_STATEMENT);
+    }
+
+    this.#eat("return");
+    const argument = this.#expressionStatement();
+
+    return {
+      type: "ReturnStatement",
+      argument,
+    };
   }
 
   #forStatement(): ASTNode {
@@ -96,12 +113,12 @@ export class Parser {
     switch (this.#lookahead.type) {
       case "{":
         this.#eat("{");
-        body = this.#blockStatement();
+        body = this.#blockStatement("ForStatement");
         break;
       default:
         body = {
           type: "BlockStatement",
-          body: [this.#statement()],
+          body: [this.#statement("ForStatement")],
         };
     }
 
@@ -124,10 +141,12 @@ export class Parser {
     const params = this.#functionParams();
 
     this.#eat("{");
-    const body = this.#blockStatement();
+    const body = this.#blockStatement("FunctionDeclaration");
     return {
       type: "FunctionDeclaration",
       id,
+      generator: false,
+      async: false,
       params,
       body,
     };
@@ -165,7 +184,7 @@ export class Parser {
 
     if (this.#lookahead.type === "{") {
       this.#eat("{");
-      const body = this.#blockStatement();
+      const body = this.#blockStatement("IfStatement");
       return {
         type: "IfStatement",
         condition,
@@ -173,7 +192,7 @@ export class Parser {
       };
     }
 
-    const body = this.#statement();
+    const body = this.#statement("IfStatement");
     return {
       type: "IfStatement",
       condition,
@@ -184,10 +203,10 @@ export class Parser {
     };
   }
 
-  #blockStatement(): ASTNode {
+  #blockStatement(type: ASTNodeType): ASTNode {
     return {
       type: "BlockStatement",
-      body: this.#statementList(true),
+      body: this.#statementList(type, true),
     };
   }
 
@@ -238,7 +257,7 @@ export class Parser {
       let value = this.#assignmentExpression();
 
       if (!this.#checkIsValidLeftHandSide(id)) {
-        throw new Error("Not valid left hand side of assignment operator");
+        throw new Error(errorMessage.INVALID_LEFT_HAND_SIDE);
       }
 
       id = {

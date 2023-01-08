@@ -40,6 +40,7 @@ export type ASTNodeType =
   | "BlockStatement"
   | "ForStatement"
   | "WhileStatement"
+  | "ReturnStatement"
   | "BinaryExpression"
   | "UnaryExpression"
   | "ParenthesizedExpression"
@@ -87,6 +88,8 @@ export interface ASTNode {
   property?: ASTNode;
   condition?: ASTNode;
   params?: ASTNode[];
+  generator?: boolean;
+  async?: boolean;
   arguments?: ASTNode[];
   callee?: ASTNode;
   init?: ASTNode | null;

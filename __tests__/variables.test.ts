@@ -136,6 +136,6 @@ describe("variables", () => {
     const parser = new Parser(`
       x() = 20
     `);
-    expect(parser.parse).toThrow();
+    expect(() => parser.parse()).toThrowError();
   });
 });

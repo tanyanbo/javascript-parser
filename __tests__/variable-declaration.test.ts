@@ -110,6 +110,6 @@ describe("variable declaration", () => {
     const parser = new Parser(`
       const x() = 20
     `);
-    expect(parser.parse).toThrow();
+    expect(() => parser.parse()).toThrowError();
   });
 });

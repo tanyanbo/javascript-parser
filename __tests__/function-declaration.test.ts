@@ -15,6 +15,8 @@ describe("function declaration", () => {
             type: "Identifier",
             name: "test",
           },
+          generator: false,
+          async: false,
           params: [],
           body: {
             type: "BlockStatement",
@@ -38,6 +40,8 @@ describe("function declaration", () => {
             type: "Identifier",
             name: "test",
           },
+          generator: false,
+          async: false,
           params: [
             {
               type: "Identifier",
@@ -73,6 +77,8 @@ describe("function declaration", () => {
             type: "Identifier",
             name: "test",
           },
+          generator: false,
+          async: false,
           params: [],
           body: {
             type: "BlockStatement",
@@ -106,5 +112,56 @@ describe("function declaration", () => {
         },
       ])
     );
+  });
+
+  it("should parse return statement correctly", () => {
+    const parser = new Parser(`
+      function test() {
+        return 10
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: false,
+          async: false,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "ReturnStatement",
+                argument: {
+                  type: "NumericLiteral",
+                  value: 10,
+                },
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should throw when it encounters a return statement outside of a function", () => {
+    const parser = new Parser(`
+    for (;;) {
+      return 10
+    }
+    `);
+    expect(() => parser.parse()).toThrowError();
+  });
+
+  it("should throw when it encounters a return statement outside of a function and block", () => {
+    const parser = new Parser(`
+      return 10
+    `);
+    expect(() => parser.parse()).toThrowError();
   });
 });
