@@ -164,4 +164,216 @@ describe("function declaration", () => {
     `);
     expect(() => parser.parse()).toThrowError();
   });
+
+  it("should parse a generator function declaration with no arguments and no body", () => {
+    const parser = new Parser(`
+      function* test() {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: true,
+          async: false,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse an async function declaration with no arguments and no body", () => {
+    const parser = new Parser(`
+      async function test() {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: false,
+          async: true,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse an async generator function declaration with no arguments and no body", () => {
+    const parser = new Parser(`
+      async function* test() {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: true,
+          async: true,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse await expression correctly", () => {
+    const parser = new Parser(`
+      async function test() {
+        const x = 1 + await 10
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: false,
+          async: true,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "VariableDeclaration",
+                id: {
+                  type: "Identifier",
+                  name: "x",
+                },
+                value: {
+                  type: "BinaryExpression",
+                  left: {
+                    type: "NumericLiteral",
+                    value: 1,
+                  },
+                  operator: "+",
+                  right: {
+                    type: "AwaitExpression",
+                    argument: {
+                      type: "NumericLiteral",
+                      value: 10,
+                    },
+                  },
+                },
+                kind: "const",
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse yield expression correctly", () => {
+    const parser = new Parser(`
+      function* test() {
+        yield 10
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: true,
+          async: false,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "YieldExpression",
+                argument: {
+                  type: "NumericLiteral",
+                  value: 10,
+                },
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse yield expression in binary expression correctly", () => {
+    const parser = new Parser(`
+      function* test() {
+        const x = 1 + yield 10
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: true,
+          async: false,
+          params: [],
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "VariableDeclaration",
+                id: {
+                  type: "Identifier",
+                  name: "x",
+                },
+                value: {
+                  type: "BinaryExpression",
+                  left: {
+                    type: "NumericLiteral",
+                    value: 1,
+                  },
+                  operator: "+",
+                  right: {
+                    type: "YieldExpression",
+                    argument: {
+                      type: "NumericLiteral",
+                      value: 10,
+                    },
+                  },
+                },
+                kind: "const",
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
 });

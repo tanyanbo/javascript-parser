@@ -1,8 +1,19 @@
 import { Parser } from "./parser";
 
-const str = `
+// function* test(): Generator<number> {
+//   const x = yield 1 + 2;
+//   console.log(x);
+// }
+//
+// const gen = test();
+// console.log(gen.next().value);
 
-      return 10
+const str = `
+let x
+function* test() {
+  x = yield 1 + 2;
+  console.log(x);
+}
   `;
 
 const parser = new Parser(str);

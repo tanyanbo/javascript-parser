@@ -58,6 +58,8 @@ export class Parser {
       case "if":
         return this.#ifStatement();
       case "function":
+      case "function*":
+      case "async":
         return this.#functionDeclaration();
       case "for":
         return this.#forStatement();
@@ -136,7 +138,24 @@ export class Parser {
   }
 
   #functionDeclaration(): ASTNode {
-    this.#eat("function");
+    let isGenerator = false;
+    let isAsync = false;
+
+    if (this.#lookahead.type === "async") {
+      this.#eat("async");
+      isAsync = true;
+    }
+
+    switch (this.#lookahead.type) {
+      case "function":
+        this.#eat("function");
+        break;
+      case "function*":
+        this.#eat("function*");
+        isGenerator = true;
+        break;
+    }
+
     const id = this.#identifier();
     const params = this.#functionParams();
 
@@ -145,8 +164,8 @@ export class Parser {
     return {
       type: "FunctionDeclaration",
       id,
-      generator: false,
-      async: false,
+      generator: isGenerator,
+      async: isAsync,
       params,
       body,
     };
@@ -211,7 +230,7 @@ export class Parser {
   }
 
   #expressionStatement(eatSemicolon: boolean = true): ASTNode {
-    const node = this.#assignmentExpression();
+    const node = this.#yieldExpression();
     if (eatSemicolon && this.#lookahead.type === ";") {
       this.#eat(";");
     }
@@ -246,6 +265,19 @@ export class Parser {
     };
   }
 
+  #yieldExpression(): ASTNode {
+    if (this.#lookahead.type === "yield") {
+      this.#eat("yield");
+      const argument = this.#assignmentExpression();
+      return {
+        type: "YieldExpression",
+        argument,
+      };
+    }
+
+    return this.#assignmentExpression();
+  }
+
   #assignmentExpression(): ASTNode {
     let id = this.#equalityExpression();
 
@@ -254,7 +286,7 @@ export class Parser {
       this.#lookahead.type === "ComplexAssignmentOperator"
     ) {
       const operator = this.#eat(this.#lookahead.type);
-      let value = this.#assignmentExpression();
+      let value = this.#expressionStatement();
 
       if (!this.#checkIsValidLeftHandSide(id)) {
         throw new Error(errorMessage.INVALID_LEFT_HAND_SIDE);
@@ -323,6 +355,15 @@ export class Parser {
       };
     }
 
+    if (this.#lookahead.type === "await") {
+      this.#eat("await");
+      const argument = this.#unaryExpression();
+      return {
+        type: "AwaitExpression",
+        argument,
+      };
+    }
+
     return this.#parenthesizedExpression();
   }
 
@@ -383,6 +424,8 @@ export class Parser {
           return maybeCallExpression;
         }
         return lhs;
+      case "yield":
+        return this.#yieldExpression();
     }
 
     throw new Error(`Invalid primary expression. Got: ${this.#lookahead.type}`);
