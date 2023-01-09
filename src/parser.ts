@@ -71,7 +71,7 @@ export class Parser {
   }
 
   #returnStatement(type: ASTNodeType): ASTNode {
-    if (type !== "FunctionDeclaration") {
+    if (type !== "FunctionDeclaration" && type !== "ArrowFunctionExpression") {
       throw new Error(errorMessage.INVALID_RETURN_STATEMENT);
     }
 
@@ -230,11 +230,29 @@ export class Parser {
   }
 
   #expressionStatement(eatSemicolon: boolean = true): ASTNode {
-    const node = this.#yieldExpression();
+    if (this.#lookahead.type === "async") {
+      return this.#maybeAsyncArrowFunction();
+    }
+
+    const node = this.#sequenceExpression();
     if (eatSemicolon && this.#lookahead.type === ";") {
       this.#eat(";");
     }
     return node;
+  }
+
+  #maybeAsyncArrowFunction(): ASTNode {
+    this.#eat("async");
+    if (this.#lookahead.type !== "(" && this.#lookahead.type !== "Identifier") {
+      throw new Error(errorMessage.INVALID_ASYNC);
+    }
+
+    if (this.#lookahead.type === "(") {
+      return { ...this.#parenthesizedExpression(), async: true };
+    } else {
+      const param = this.#identifier();
+      return { ...this.#arrowFunction([param]), async: true };
+    }
   }
 
   #variableDeclaration(eatSemicolon: boolean = true): ASTNode {
@@ -263,6 +281,23 @@ export class Parser {
       value,
       kind,
     };
+  }
+
+  #sequenceExpression(): ASTNode {
+    let left = this.#yieldExpression();
+    const expressions: ASTNode[] = [left];
+
+    while (this.#lookahead.type === ",") {
+      this.#eat(",").value;
+      const right = this.#yieldExpression();
+      expressions.push(right);
+
+      left = {
+        type: "SequenceExpression",
+        expressions,
+      };
+    }
+    return left;
   }
 
   #yieldExpression(): ASTNode {
@@ -370,8 +405,21 @@ export class Parser {
   #parenthesizedExpression(): ASTNode {
     if (this.#lookahead.type === "(") {
       this.#eat("(");
-      const node = this.#assignmentExpression();
+
+      const maybeArrowFunctionNoParams = this.#maybeArrowFunctionNoParams();
+      if (maybeArrowFunctionNoParams !== null) {
+        return maybeArrowFunctionNoParams;
+      }
+
+      const node = this.#expressionStatement();
       this.#eat(")");
+
+      // check for arrow function
+      const maybeArrowFunction = this.#maybeArrowFunction(node);
+      if (maybeArrowFunction !== null) {
+        return maybeArrowFunction;
+      }
+
       return {
         type: "ParenthesizedExpression",
         body: node,
@@ -379,6 +427,70 @@ export class Parser {
     }
 
     return this.#primaryExpression();
+  }
+
+  #maybeArrowFunctionNoParams(): ASTNode | null {
+    if (this.#lookahead.type === ")") {
+      this.#eat(")");
+      // @ts-ignore
+      if (this.#lookahead.type !== "=>") {
+        throw new Error("Invalid token: )");
+      }
+
+      return this.#arrowFunction([]);
+    }
+
+    return null;
+  }
+
+  #maybeArrowFunction(maybeFunctionParams: ASTNode): ASTNode | null {
+    if (
+      this.#lookahead.type === "=>" &&
+      (maybeFunctionParams.type === "SequenceExpression" ||
+        maybeFunctionParams.type === "Identifier")
+    ) {
+      let params: ASTNode[];
+      switch (maybeFunctionParams.type) {
+        case "SequenceExpression":
+          if (
+            maybeFunctionParams.expressions!.some(
+              (expression) =>
+                expression.type !== "Identifier" &&
+                expression.type !== "AssignmentExpression"
+            )
+          ) {
+            throw new Error(errorMessage.INVALID_FUNCTION_PARAMETERS);
+          }
+          params = maybeFunctionParams.expressions!;
+          break;
+        case "Identifier":
+          params = [maybeFunctionParams];
+          break;
+      }
+
+      return this.#arrowFunction(params);
+    }
+
+    return null;
+  }
+
+  #arrowFunction(params: ASTNode[]): ASTNode {
+    this.#eat("=>");
+    let body: ASTNode;
+    if (this.#lookahead.type === "{") {
+      this.#eat("{");
+      body = this.#blockStatement("ArrowFunctionExpression");
+    } else {
+      body = this.#sequenceExpression();
+    }
+
+    return {
+      type: "ArrowFunctionExpression",
+      body,
+      params,
+      generator: false,
+      async: false,
+    };
   }
 
   #binaryExpression({
@@ -469,6 +581,9 @@ export class Parser {
           object: identifier,
           property,
         };
+      case "=>":
+        // arrow function
+        return this.#arrowFunction([identifier]);
       default:
         return identifier;
     }

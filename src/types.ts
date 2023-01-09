@@ -9,6 +9,7 @@ export type TokenType =
   | ")"
   | "."
   | ","
+  | "=>"
   | "function"
   | "function*"
   | "yield"
@@ -53,6 +54,8 @@ export type ASTNodeType =
   | "MemberExpression"
   | "AwaitExpression"
   | "YieldExpression"
+  | "SequenceExpression"
+  | "ArrowFunctionExpression"
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
@@ -79,7 +82,8 @@ export type Operator =
   | "=="
   | "!="
   | "==="
-  | "!==";
+  | "!=="
+  | "=>";
 
 export interface ASTNode {
   type: ASTNodeType;
@@ -103,4 +107,5 @@ export interface ASTNode {
   update?: ASTNode | null;
   kind?: "let" | "const";
   argument?: ASTNode;
+  expressions?: ASTNode[];
 }

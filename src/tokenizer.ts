@@ -12,6 +12,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\)/d, ")"],
   [/^\./d, "."],
   [/^,/d, ","],
+  [/^=>/d, "=>"],
   [/^\[.*]/d, "SquareBrackets"],
   [/^\*\*/d, "PowerOperator"],
   [/^(?:>=|<=|>|<)/d, "ComparisonOperator"],
