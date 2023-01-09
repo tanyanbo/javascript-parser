@@ -9,13 +9,12 @@ import { Parser } from "./parser";
 // console.log(gen.next().value);
 
 const str = `
-let x
-function* test() {
-  x = yield 1 + 2;
-  console.log(x);
-}
+
+a = 1, b = 2
   `;
 
 const parser = new Parser(str);
 const ast = parser.parse();
-console.log(JSON.stringify(ast, null, 2));
+const res = JSON.stringify(ast, null, 2);
+
+console.log(res);

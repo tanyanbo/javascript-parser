@@ -176,10 +176,28 @@ export class Parser {
     const params: ASTNode[] = [];
 
     while (this.#lookahead.type === "Identifier") {
-      params.push({
-        type: "Identifier",
-        name: this.#eat("Identifier").value,
-      });
+      let param: ASTNode;
+      const identifier = this.#eat("Identifier").value;
+      // @ts-ignore
+      if (this.#lookahead.type === "AssignmentOperator") {
+        this.#eat("AssignmentOperator");
+        const right = this.#expressionStatement(false);
+        param = {
+          type: "AssignmentPattern",
+          left: {
+            type: "Identifier",
+            name: identifier,
+          },
+          right,
+        };
+      } else {
+        param = {
+          type: "Identifier",
+          name: identifier,
+        };
+      }
+      params.push(param);
+
       // @ts-ignore
       if (this.#lookahead.type === ")") {
         this.#eat(")");
@@ -321,7 +339,7 @@ export class Parser {
       this.#lookahead.type === "ComplexAssignmentOperator"
     ) {
       const operator = this.#eat(this.#lookahead.type);
-      let value = this.#expressionStatement();
+      let value = this.#yieldExpression();
 
       if (!this.#checkIsValidLeftHandSide(id)) {
         throw new Error(errorMessage.INVALID_LEFT_HAND_SIDE);
@@ -447,7 +465,8 @@ export class Parser {
     if (
       this.#lookahead.type === "=>" &&
       (maybeFunctionParams.type === "SequenceExpression" ||
-        maybeFunctionParams.type === "Identifier")
+        maybeFunctionParams.type === "Identifier" ||
+        maybeFunctionParams.type === "AssignmentExpression")
     ) {
       let params: ASTNode[];
       switch (maybeFunctionParams.type) {
@@ -461,11 +480,29 @@ export class Parser {
           ) {
             throw new Error(errorMessage.INVALID_FUNCTION_PARAMETERS);
           }
-          params = maybeFunctionParams.expressions!;
+
+          params = maybeFunctionParams.expressions!.map((expression) => {
+            if (expression.type === "Identifier") {
+              return expression;
+            }
+            return {
+              type: "AssignmentPattern",
+              left: expression.id,
+              right: expression.value as ASTNode,
+            };
+          });
           break;
         case "Identifier":
           params = [maybeFunctionParams];
           break;
+        case "AssignmentExpression":
+          params = [
+            {
+              type: "AssignmentPattern",
+              left: maybeFunctionParams.id,
+              right: maybeFunctionParams.value as ASTNode,
+            },
+          ];
       }
 
       return this.#arrowFunction(params);

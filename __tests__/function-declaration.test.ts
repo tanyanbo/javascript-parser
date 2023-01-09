@@ -376,4 +376,45 @@ describe("function declaration", () => {
       ])
     );
   });
+
+  it("should parse a function declaration with default arguments", () => {
+    const parser = new Parser(`
+      function test(b, a = 3) {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "FunctionDeclaration",
+          id: {
+            type: "Identifier",
+            name: "test",
+          },
+          generator: false,
+          async: false,
+          params: [
+            {
+              type: "Identifier",
+              name: "b",
+            },
+            {
+              type: "AssignmentPattern",
+              left: {
+                type: "Identifier",
+                name: "a",
+              },
+              right: {
+                type: "NumericLiteral",
+                value: 3,
+              },
+            },
+          ],
+          body: {
+            type: "BlockStatement",
+            body: [],
+          },
+        },
+      ])
+    );
+  });
 });

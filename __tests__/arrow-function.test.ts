@@ -267,4 +267,97 @@ describe("arrow function", () => {
       ])
     );
   });
+
+  it("should parse an arrow function with one default parameter correctly", () => {
+    const parser = new Parser(`
+      const fn = (a = 1) => {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "fn",
+          },
+          value: {
+            type: "ArrowFunctionExpression",
+            generator: false,
+            async: false,
+            params: [
+              {
+                type: "AssignmentPattern",
+                left: {
+                  type: "Identifier",
+                  name: "a",
+                },
+                right: {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+              },
+            ],
+            body: {
+              type: "BlockStatement",
+              body: [],
+            },
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
+
+  it("should parse an arrow function with two default parameters correctly", () => {
+    const parser = new Parser(`
+      const fn = (a = 1, b = 2) => {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "fn",
+          },
+          value: {
+            type: "ArrowFunctionExpression",
+            generator: false,
+            async: false,
+            params: [
+              {
+                type: "AssignmentPattern",
+                left: {
+                  type: "Identifier",
+                  name: "a",
+                },
+                right: {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+              },
+              {
+                type: "AssignmentPattern",
+                left: {
+                  type: "Identifier",
+                  name: "b",
+                },
+                right: {
+                  type: "NumericLiteral",
+                  value: 2,
+                },
+              },
+            ],
+            body: {
+              type: "BlockStatement",
+              body: [],
+            },
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
 });

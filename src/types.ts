@@ -59,6 +59,7 @@ export type ASTNodeType =
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
+  | "AssignmentPattern"
   | "CallExpression"
   | "IfStatement"
   | "Program";
