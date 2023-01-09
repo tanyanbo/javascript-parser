@@ -566,6 +566,10 @@ export class Parser {
         return this.#stringLiteral();
       case "boolean":
         return this.#booleanLiteral();
+      case "[":
+        return this.#arrayLiteral();
+      case "{":
+        return this.#objectLiteral();
       case "Identifier":
         const lhs = this.#leftHandSideExpression();
         const maybeCallExpression = this.#maybeCallExpression(lhs);
@@ -604,6 +608,32 @@ export class Parser {
     return {
       type: "BooleanLiteral",
       value: Boolean(node.value),
+    };
+  }
+
+  #arrayLiteral(): ASTNode {
+    this.#eat("[");
+    const elements: ASTNode[] = [];
+
+    while (this.#lookahead.type !== "]") {
+      const element = this.#yieldExpression();
+      elements.push(element);
+      if (this.#lookahead.type === ",") {
+        this.#eat(",");
+      }
+    }
+
+    this.#eat("]");
+
+    return {
+      type: "ArrayLiteral",
+      elements,
+    };
+  }
+
+  #objectLiteral(): ASTNode {
+    return {
+      type: "ObjectLiteral",
     };
   }
 

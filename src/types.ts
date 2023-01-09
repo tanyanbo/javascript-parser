@@ -5,6 +5,8 @@ export type TokenType =
   | ";"
   | "{"
   | "}"
+  | "["
+  | "]"
   | "("
   | ")"
   | "."
@@ -42,6 +44,9 @@ export type ASTNodeType =
   | "NumericLiteral"
   | "StringLiteral"
   | "BooleanLiteral"
+  | "ArrayLiteral"
+  | "ObjectLiteral"
+  | "Property"
   | "BlockStatement"
   | "ForStatement"
   | "WhileStatement"
@@ -109,4 +114,9 @@ export interface ASTNode {
   kind?: "let" | "const";
   argument?: ASTNode;
   expressions?: ASTNode[];
+  properties?: ASTNode[];
+  key?: ASTNode;
+  computed?: boolean;
+  method?: boolean;
+  elements?: ASTNode[];
 }
