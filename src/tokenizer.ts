@@ -34,6 +34,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\basync\b/d, "async"],
   [/^\bawait\b/d, "await"],
   [/^\byield\b/d, "yield"],
+  [/^\bthis\b/d, "this"],
   [/^\bfunction\s*\b\*/d, "function*"],
   [/^\bfunction\b/d, "function"],
   [/^\breturn\b/d, "return"],

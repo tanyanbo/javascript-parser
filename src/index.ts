@@ -1,9 +1,7 @@
 import { Parser } from "./parser";
 
 const str = `
-    for (const x of arr) {
-      return x
-    }
+    const x = 2 + this.arr[1]
 `;
 
 // const str = `

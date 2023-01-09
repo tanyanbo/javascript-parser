@@ -817,6 +817,7 @@ export class Parser {
         return this.#arrayLiteral();
       case "{":
         return this.#objectLiteral();
+      case "this":
       case "Identifier":
         const lhs = this.#leftHandSideExpression();
         const maybeCallExpression = this.#maybeCallExpression(lhs);
@@ -873,6 +874,13 @@ export class Parser {
     return {
       type: "UndefinedLiteral",
       value: undefined,
+    };
+  }
+
+  #thisExpression(): ASTNode {
+    this.#eat("this");
+    return {
+      type: "ThisExpression",
     };
   }
 
@@ -961,10 +969,14 @@ export class Parser {
   }
 
   #leftHandSideExpression(): ASTNode {
-    const identifier = this.#identifier();
-
-    if (this.#lookahead.type === "=>") {
-      return this.#arrowFunction([identifier]);
+    let identifier;
+    if (this.#lookahead.type === "this") {
+      identifier = this.#thisExpression();
+    } else {
+      identifier = this.#identifier();
+      if (this.#lookahead.type === "=>") {
+        return this.#arrowFunction([identifier]);
+      }
     }
 
     return this.#memberExpression(identifier);
