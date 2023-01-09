@@ -64,6 +64,7 @@ describe("for loop", () => {
                     type: "Identifier",
                     name: "log",
                   },
+                  computed: false,
                 },
                 arguments: [
                   {
@@ -108,6 +109,7 @@ describe("for loop", () => {
                     type: "Identifier",
                     name: "log",
                   },
+                  computed: false,
                 },
                 arguments: [
                   {
@@ -151,6 +153,7 @@ describe("for loop", () => {
                     type: "Identifier",
                     name: "log",
                   },
+                  computed: false,
                 },
                 arguments: [
                   {

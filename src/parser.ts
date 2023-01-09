@@ -60,7 +60,7 @@ export class Parser {
       case "function":
       case "function*":
       case "async":
-        return this.#functionDeclaration();
+        return this.#functionDeclarationOrExpression();
       case "for":
         return this.#forStatement();
       case "return":
@@ -141,7 +141,7 @@ export class Parser {
     };
   }
 
-  #functionDeclaration(): ASTNode {
+  #functionDeclarationOrExpression(): ASTNode {
     let isGenerator = false;
     let isAsync = false;
 
@@ -337,7 +337,7 @@ export class Parser {
       case "async":
       case "function":
       case "function*":
-        value = this.#functionDeclaration();
+        value = this.#functionDeclarationOrExpression();
         break;
       default:
         value = this.#expressionStatement(eatSemicolon);
@@ -719,7 +719,7 @@ export class Parser {
           case "async":
           case "function":
           case "function*":
-            value = this.#functionDeclaration();
+            value = this.#functionDeclarationOrExpression();
             break;
           default:
             value = this.#yieldExpression();
@@ -750,21 +750,45 @@ export class Parser {
 
   #leftHandSideExpression(): ASTNode {
     const identifier = this.#identifier();
-    switch (this.#lookahead.type) {
-      case ".":
-        this.#eat(".");
-        const property = this.#identifier();
-        return {
-          type: "MemberExpression",
-          object: identifier,
-          property,
-        };
-      case "=>":
-        // arrow function
-        return this.#arrowFunction([identifier]);
-      default:
-        return identifier;
+
+    if (this.#lookahead.type === "=>") {
+      return this.#arrowFunction([identifier]);
     }
+
+    return this.#memberExpression(identifier);
+  }
+
+  #memberExpression(identifier: ASTNode): ASTNode {
+    if (this.#lookahead.type !== "." && this.#lookahead.type !== "[") {
+      return identifier;
+    }
+    let node = identifier;
+
+    let property: ASTNode;
+    while (this.#lookahead.type === "." || this.#lookahead.type === "[") {
+      if (this.#lookahead.type === ".") {
+        this.#eat(".");
+        property = this.#identifier();
+        node = {
+          type: "MemberExpression",
+          object: node,
+          property,
+          computed: false,
+        };
+      } else {
+        this.#eat("[");
+        property = this.#expressionStatement(false);
+        this.#eat("]");
+        node = {
+          type: "MemberExpression",
+          object: node,
+          property,
+          computed: true,
+        };
+      }
+    }
+
+    return node;
   }
 
   #maybeCallExpression(callee: ASTNode): ASTNode | null {

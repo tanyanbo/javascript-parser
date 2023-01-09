@@ -9,8 +9,7 @@ import { Parser } from "./parser";
 // console.log(gen.next().value);
 
 const str = `
-
-      const fn = () => {}
+  obj.a.b[1]
   `;
 
 const parser = new Parser(str);
