@@ -72,9 +72,20 @@ export class Parser {
         return this.#returnStatement();
       case "class":
         return this.#classDeclaration();
+      case "throw":
+        return this.#throwStatement();
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #throwStatement(): ASTNode {
+    this.#eat("throw");
+    const argument = this.#expressionStatement();
+    return {
+      type: "ThrowStatement",
+      argument,
+    };
   }
 
   #classDeclaration(): ASTNode {
