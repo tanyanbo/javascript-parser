@@ -992,7 +992,22 @@ export class Parser {
     while (this.#lookahead.type === "." || this.#lookahead.type === "[") {
       if (this.#lookahead.type === ".") {
         this.#eat(".");
+
+        let isPrivate = false;
+        // @ts-ignore
+        if (this.#lookahead.type === "#") {
+          this.#eat("#");
+          isPrivate = true;
+        }
         property = this.#identifier();
+
+        if (isPrivate) {
+          property = {
+            type: "PrivateName",
+            id: property,
+          };
+        }
+
         node = {
           type: "MemberExpression",
           object: node,

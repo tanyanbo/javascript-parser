@@ -692,4 +692,33 @@ describe("class", () => {
       ])
     );
   });
+
+  it("should parse calling a private method correctly", () => {
+    const parser = new Parser(`
+      this.#test()
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "CallExpression",
+          callee: {
+            type: "MemberExpression",
+            object: {
+              type: "ThisExpression",
+            },
+            property: {
+              type: "PrivateName",
+              id: {
+                type: "Identifier",
+                name: "test",
+              },
+            },
+            computed: false,
+          },
+          arguments: [],
+        },
+      ])
+    );
+  });
 });
