@@ -163,4 +163,48 @@ describe("for loop", () => {
       ])
     );
   });
+
+  it("should parse a for of loop correctly", () => {
+    const parser = new Parser(`
+      for (const x of arr) 
+        console.log(x);
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "ForOfStatement",
+          left: {
+            type: "Identifier",
+            name: "x",
+          },
+          right: {
+            type: "Identifier",
+            name: "arr",
+          },
+          body: {
+            type: "CallExpression",
+            callee: {
+              type: "MemberExpression",
+              object: {
+                type: "Identifier",
+                name: "console",
+              },
+              property: {
+                type: "Identifier",
+                name: "log",
+              },
+              computed: false,
+            },
+            arguments: [
+              {
+                type: "Identifier",
+                name: "x",
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
 });

@@ -28,6 +28,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^[*\/]/d, "MultiplicativeOperator"],
   [/^(?:\blet\b|\bconst\b)/d, "VariableDeclaration"],
   [/^\bif\b/d, "if"],
+  [/^\bof\b/d, "of"],
   [/^\bfor\b/d, "for"],
   [/^\bwhile\b/d, "while"],
   [/^\basync\b/d, "async"],

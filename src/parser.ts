@@ -241,6 +241,8 @@ export class Parser {
     this.#eat("for");
     this.#eat("(");
 
+    let nodeWithoutBody: ASTNode;
+
     let init: ASTNode | null = null;
     switch (this.#lookahead.type) {
       case "VariableDeclaration":
@@ -251,18 +253,34 @@ export class Parser {
         break;
     }
 
-    this.#eat(";");
-    let test: ASTNode | null = null;
-    if (this.#lookahead.type !== ";") {
-      test = this.#assignmentExpression();
-    }
-    this.#eat(";");
+    if (this.#lookahead.type === "of") {
+      this.#eat("of");
+      const right = this.#leftHandSideExpression();
+      this.#eat(")");
+      nodeWithoutBody = {
+        ...init!,
+        right,
+      };
+    } else {
+      this.#eat(";");
+      let test: ASTNode | null = null;
+      if (this.#lookahead.type !== ";") {
+        test = this.#assignmentExpression();
+      }
+      this.#eat(";");
 
-    let update: ASTNode | null = null;
-    if (this.#lookahead.type !== ")") {
-      update = this.#assignmentExpression();
+      let update: ASTNode | null = null;
+      if (this.#lookahead.type !== ")") {
+        update = this.#assignmentExpression();
+      }
+      this.#eat(")");
+      nodeWithoutBody = {
+        type: "ForStatement",
+        init,
+        test,
+        update,
+      };
     }
-    this.#eat(")");
 
     let body: ASTNode | null;
     switch (this.#lookahead.type) {
@@ -279,10 +297,7 @@ export class Parser {
     }
 
     return {
-      type: "ForStatement",
-      init,
-      test,
-      update,
+      ...nodeWithoutBody,
       body,
     };
   }
@@ -459,6 +474,16 @@ export class Parser {
   #variableDeclaration(eatSemicolon: boolean = true): ASTNode {
     const kind = this.#eat("VariableDeclaration").value as "let" | "const";
     const variableName: string = this.#eat("Identifier").value;
+
+    if (this.#lookahead.type === "of") {
+      return {
+        type: "ForOfStatement",
+        left: {
+          type: "Identifier",
+          name: variableName,
+        },
+      };
+    }
 
     if (
       this.#lookahead.type !== "AssignmentOperator" &&
