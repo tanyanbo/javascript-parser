@@ -65,16 +65,135 @@ export class Parser {
         return this.#forStatement();
       case "return":
         return this.#returnStatement(type);
+      case "class":
+        return this.#classDeclaration();
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #classDeclaration(): ASTNode {
+    this.#eat("class");
+    const id = this.#identifier();
+    let superClass: ASTNode | undefined;
+
+    if (this.#lookahead.type === "extends") {
+      this.#eat("extends");
+      superClass = this.#identifier();
+    }
+
+    const body = this.#classBody();
+
+    return {
+      type: "ClassDeclaration",
+      id,
+      body,
+      superClass,
+    };
+  }
+
+  #classBody(): ASTNode {
+    this.#eat("{");
+    const statements: ASTNode[] = [];
+
+    while (this.#lookahead.type !== "}") {
+      const statement = this.#classStatement();
+      statements.push(statement);
+    }
+
+    this.#eat("}");
+
+    return {
+      type: "ClassBody",
+      body: statements,
+    };
+  }
+
+  #classStatement(
+    isStatic: boolean = false,
+    isPrivate: boolean = false,
+    isAsync: boolean = false
+  ): ASTNode {
+    let asynchronous = isAsync;
+    if (this.#lookahead.type === "static") {
+      this.#eat("static");
+      return this.#classStatement(true, isPrivate, asynchronous);
+    }
+
+    if (this.#lookahead.type === "async") {
+      this.#eat("async");
+      asynchronous = true;
+    }
+
+    if (this.#lookahead.type === "#") {
+      this.#eat("#");
+      return this.#classStatement(isStatic, true, asynchronous);
+    }
+
+    if (this.#lookahead.type !== "Identifier") {
+      throw new Error(
+        `${errorMessage.INVALID_CLASS_STATEMENT}, got: ${this.#lookahead.type}`
+      );
+    }
+
+    const id = this.#identifier();
+    let key: ASTNode;
+    if (isPrivate) {
+      key = {
+        type: "PrivateName",
+        id,
+      };
+    } else {
+      key = id;
+    }
+
+    // @ts-ignore
+    if (this.#lookahead.type === "AssignmentOperator") {
+      // class property with initial value
+      this.#eat("AssignmentOperator");
+      const value = this.#expressionStatement(true);
+
+      return {
+        type: isPrivate ? "ClassPrivateProperty" : "ClassProperty",
+        static: isStatic,
+        key,
+        value,
+      };
+    }
+
+    // @ts-ignore
+    if (this.#lookahead.type === "(") {
+      // class method
+      const fn = this.#functionExpression(asynchronous, false);
+
+      return {
+        type: "ClassMethodDefinition",
+        static: isStatic,
+        key,
+        kind: id.name === "constructor" ? "constructor" : "method",
+        value: fn,
+      };
+    }
+
+    // class property without initial value
+    // @ts-ignore
+    if (this.#lookahead.type === ";") {
+      this.#eat(";");
+    }
+
+    return {
+      type: isPrivate ? "ClassPrivateProperty" : "ClassProperty",
+      static: isStatic,
+      key,
+    };
   }
 
   #returnStatement(type: ASTNodeType): ASTNode {
     if (
       type !== "FunctionDeclaration" &&
       type !== "ArrowFunctionExpression" &&
-      type !== "FunctionExpression"
+      type !== "FunctionExpression" &&
+      type !== "ClassMethodDefinition"
     ) {
       throw new Error(errorMessage.INVALID_RETURN_STATEMENT);
     }

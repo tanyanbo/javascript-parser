@@ -12,6 +12,7 @@ export type TokenType =
   | "."
   | ","
   | ":"
+  | "#"
   | "=>"
   | "function"
   | "function*"
@@ -34,6 +35,9 @@ export type TokenType =
   | "Identifier"
   | "VariableDeclaration"
   | "boolean"
+  | "class"
+  | "extends"
+  | "static"
   | null;
 
 export interface Token {
@@ -66,6 +70,12 @@ export type ASTNodeType =
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
+  | "ClassDeclaration"
+  | "ClassBody"
+  | "ClassProperty"
+  | "ClassPrivateProperty"
+  | "ClassMethodDefinition"
+  | "PrivateName"
   | "AssignmentPattern"
   | "CallExpression"
   | "IfStatement"
@@ -113,7 +123,7 @@ export interface ASTNode {
   init?: ASTNode | null;
   test?: ASTNode | null;
   update?: ASTNode | null;
-  kind?: "let" | "const";
+  kind?: "let" | "const" | "constructor" | "method";
   argument?: ASTNode;
   expressions?: ASTNode[];
   properties?: ASTNode[];
@@ -121,4 +131,6 @@ export interface ASTNode {
   computed?: boolean;
   method?: boolean;
   elements?: ASTNode[];
+  superClass?: ASTNode;
+  static?: boolean;
 }

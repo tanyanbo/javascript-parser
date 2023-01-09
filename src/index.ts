@@ -9,7 +9,9 @@ import { Parser } from "./parser";
 // console.log(gen.next().value);
 
 const str = `
-  obj.a.b[1]
+      class Person {
+        constructor() {}
+      }
   `;
 
 const parser = new Parser(str);
