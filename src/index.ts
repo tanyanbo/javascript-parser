@@ -10,7 +10,7 @@ import { Parser } from "./parser";
 
 const str = `
 
-a = 1, b = 2
+      const fn = () => {}
   `;
 
 const parser = new Parser(str);

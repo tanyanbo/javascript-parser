@@ -150,6 +150,7 @@ export class Parser {
       isAsync = true;
     }
 
+    let innerParams: ASTNode[];
     switch (this.#lookahead.type) {
       case "function":
         this.#eat("function");
@@ -158,6 +159,25 @@ export class Parser {
         this.#eat("function*");
         isGenerator = true;
         break;
+      case "(":
+        // arrow function
+        innerParams = this.#functionParams();
+        return this.#arrowFunction(innerParams, isAsync);
+      case "Identifier":
+        // arrow function
+        const name = this.#eat("Identifier").value;
+        innerParams = [
+          {
+            type: "Identifier",
+            name,
+          },
+        ];
+        return this.#arrowFunction(innerParams, isAsync);
+    }
+
+    // @ts-ignore
+    if (this.#lookahead.type === "(") {
+      return this.#functionExpression(isAsync, isGenerator);
     }
 
     const id = this.#identifier();
@@ -172,6 +192,19 @@ export class Parser {
       async: isAsync,
       params,
       body,
+    };
+  }
+
+  #functionExpression(isAsync: boolean, isGenerator: boolean): ASTNode {
+    const params = this.#functionParams();
+    this.#eat("{");
+    const body = this.#blockStatement("FunctionExpression");
+    return {
+      type: "FunctionExpression",
+      params,
+      body,
+      generator: isGenerator,
+      async: isAsync,
     };
   }
 
@@ -281,7 +314,12 @@ export class Parser {
     const kind = this.#eat("VariableDeclaration").value as "let" | "const";
     const variableName: string = this.#eat("Identifier").value;
 
-    if (this.#lookahead.type !== "AssignmentOperator") {
+    if (
+      this.#lookahead.type !== "AssignmentOperator" &&
+      this.#lookahead.type !== "async" &&
+      this.#lookahead.type !== "function" &&
+      this.#lookahead.type !== "function*"
+    ) {
       return {
         type: "VariableDeclaration",
         id: {
@@ -293,7 +331,18 @@ export class Parser {
     }
 
     this.#eat("AssignmentOperator");
-    const value = this.#expressionStatement(eatSemicolon);
+    let value: ASTNode;
+
+    switch (this.#lookahead.type) {
+      case "async":
+      case "function":
+      case "function*":
+        value = this.#functionDeclaration();
+        break;
+      default:
+        value = this.#expressionStatement(eatSemicolon);
+    }
+
     return {
       type: "VariableDeclaration",
       id: {
@@ -515,7 +564,7 @@ export class Parser {
     return null;
   }
 
-  #arrowFunction(params: ASTNode[]): ASTNode {
+  #arrowFunction(params: ASTNode[], isAsync = false): ASTNode {
     this.#eat("=>");
     let body: ASTNode;
     if (this.#lookahead.type === "{") {
@@ -530,7 +579,7 @@ export class Parser {
       body,
       params,
       generator: false,
-      async: false,
+      async: isAsync,
     };
   }
 
@@ -663,19 +712,18 @@ export class Parser {
 
       if (this.#lookahead.type === "(") {
         isMethod = true;
-        const params = this.#functionParams();
-        this.#eat("{");
-        const body = this.#blockStatement("FunctionExpression");
-        value = {
-          type: "FunctionExpression",
-          params,
-          body,
-          generator: false,
-          async: isAsync,
-        };
+        value = this.#functionExpression(isAsync, false);
       } else {
         this.#eat(":");
-        value = this.#yieldExpression();
+        switch (this.#lookahead.type) {
+          case "async":
+          case "function":
+          case "function*":
+            value = this.#functionDeclaration();
+            break;
+          default:
+            value = this.#yieldExpression();
+        }
       }
 
       const property: ASTNode = {
