@@ -246,4 +246,110 @@ describe("object literal", () => {
       ])
     );
   });
+
+  it("should parse an object literal with one computed method correctly", () => {
+    const parser = new Parser(`
+      const x = {
+        [1+1]() {}
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          value: {
+            type: "ObjectLiteral",
+            properties: [
+              {
+                type: "Property",
+                key: {
+                  type: "BinaryExpression",
+                  left: {
+                    type: "NumericLiteral",
+                    value: 1,
+                  },
+                  operator: "+",
+                  right: {
+                    type: "NumericLiteral",
+                    value: 1,
+                  },
+                },
+                value: {
+                  type: "FunctionExpression",
+                  params: [],
+                  body: {
+                    type: "BlockStatement",
+                    body: [],
+                  },
+                  async: false,
+                  generator: false,
+                },
+                computed: true,
+                method: true,
+              },
+            ],
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
+
+  it("should parse an object literal with one async computed method correctly", () => {
+    const parser = new Parser(`
+      const x = {
+        async [1+1]() {}
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          value: {
+            type: "ObjectLiteral",
+            properties: [
+              {
+                type: "Property",
+                key: {
+                  type: "BinaryExpression",
+                  left: {
+                    type: "NumericLiteral",
+                    value: 1,
+                  },
+                  operator: "+",
+                  right: {
+                    type: "NumericLiteral",
+                    value: 1,
+                  },
+                },
+                value: {
+                  type: "FunctionExpression",
+                  params: [],
+                  body: {
+                    type: "BlockStatement",
+                    body: [],
+                  },
+                  async: true,
+                  generator: false,
+                },
+                computed: true,
+                method: true,
+              },
+            ],
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
 });

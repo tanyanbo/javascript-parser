@@ -645,16 +645,17 @@ export class Parser {
       let isAsync = false;
       let key: ASTNode;
 
+      if (this.#lookahead.type === "async") {
+        isAsync = true;
+        this.#eat("async");
+      }
+
       if (this.#lookahead.type === "[") {
         this.#eat("[");
         key = this.#yieldExpression();
         this.#eat("]");
         isComputed = true;
       } else {
-        if (this.#lookahead.type === "async") {
-          isAsync = true;
-          this.#eat("async");
-        }
         key = this.#identifier();
       }
 
