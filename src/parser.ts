@@ -66,6 +66,8 @@ export class Parser {
         return this.#forStatement();
       case "while":
         return this.#whileStatement();
+      case "continue":
+        return this.#continueStatement();
       case "return":
         return this.#returnStatement();
       case "class":
@@ -179,10 +181,7 @@ export class Parser {
     }
 
     // class property without initial value
-    // @ts-ignore
-    if (this.#lookahead.type === ";") {
-      this.#eat(";");
-    }
+    this.#maybeEatSemicolon();
 
     return {
       type: isPrivate ? "ClassPrivateProperty" : "ClassProperty",
@@ -295,6 +294,14 @@ export class Parser {
     return {
       ...nodeWithoutBody,
       body,
+    };
+  }
+
+  #continueStatement(): ASTNode {
+    this.#eat("continue");
+    this.#maybeEatSemicolon();
+    return {
+      type: "ContinueStatement",
     };
   }
 
@@ -1061,10 +1068,7 @@ export class Parser {
     }
     this.#eat(")");
 
-    // @ts-ignore
-    if (this.#lookahead.type === ";") {
-      this.#eat(";");
-    }
+    this.#maybeEatSemicolon();
 
     return args;
   }
@@ -1076,6 +1080,12 @@ export class Parser {
       type: "Identifier",
       name: node.value,
     };
+  }
+
+  #maybeEatSemicolon() {
+    if (this.#lookahead.type === ";") {
+      this.#eat(";");
+    }
   }
 
   #eat(type: TokenType): Token {

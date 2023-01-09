@@ -95,4 +95,76 @@ describe("while loop", () => {
       ])
     );
   });
+
+  it("should parse a continue statement correctly", () => {
+    const parser = new Parser(`
+      while (i < 10) {
+        continue
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "WhileStatement",
+          test: {
+            type: "BinaryExpression",
+            left: {
+              type: "Identifier",
+              name: "i",
+            },
+            operator: "<",
+            right: {
+              type: "NumericLiteral",
+              value: 10,
+            },
+          },
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "ContinueStatement",
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse a continue statement with semicolon correctly", () => {
+    const parser = new Parser(`
+      while (i < 10) {
+        continue;
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "WhileStatement",
+          test: {
+            type: "BinaryExpression",
+            left: {
+              type: "Identifier",
+              name: "i",
+            },
+            operator: "<",
+            right: {
+              type: "NumericLiteral",
+              value: 10,
+            },
+          },
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "ContinueStatement",
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
 });
