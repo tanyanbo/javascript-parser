@@ -71,7 +71,11 @@ export class Parser {
   }
 
   #returnStatement(type: ASTNodeType): ASTNode {
-    if (type !== "FunctionDeclaration" && type !== "ArrowFunctionExpression") {
+    if (
+      type !== "FunctionDeclaration" &&
+      type !== "ArrowFunctionExpression" &&
+      type !== "FunctionExpression"
+    ) {
       throw new Error(errorMessage.INVALID_RETURN_STATEMENT);
     }
 
@@ -632,8 +636,66 @@ export class Parser {
   }
 
   #objectLiteral(): ASTNode {
+    this.#eat("{");
+    const properties: ASTNode[] = [];
+
+    while (this.#lookahead.type !== "}") {
+      let isComputed = false;
+      let isMethod = false;
+      let isAsync = false;
+      let key: ASTNode;
+
+      if (this.#lookahead.type === "[") {
+        this.#eat("[");
+        key = this.#yieldExpression();
+        this.#eat("]");
+        isComputed = true;
+      } else {
+        if (this.#lookahead.type === "async") {
+          isAsync = true;
+          this.#eat("async");
+        }
+        key = this.#identifier();
+      }
+
+      let value: ASTNode;
+
+      if (this.#lookahead.type === "(") {
+        isMethod = true;
+        const params = this.#functionParams();
+        this.#eat("{");
+        const body = this.#blockStatement("FunctionExpression");
+        value = {
+          type: "FunctionExpression",
+          params,
+          body,
+          generator: false,
+          async: isAsync,
+        };
+      } else {
+        this.#eat(":");
+        value = this.#yieldExpression();
+      }
+
+      const property: ASTNode = {
+        type: "Property",
+        key,
+        value,
+        computed: isComputed,
+        method: isMethod,
+      };
+      properties.push(property);
+
+      if (this.#lookahead.type === ",") {
+        this.#eat(",");
+      }
+    }
+
+    this.#eat("}");
+
     return {
       type: "ObjectLiteral",
+      properties,
     };
   }
 
