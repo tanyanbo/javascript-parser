@@ -63,6 +63,8 @@ export class Parser {
         return this.#functionDeclarationOrExpression();
       case "for":
         return this.#forStatement();
+      case "while":
+        return this.#whileStatement();
       case "return":
         return this.#returnStatement(type);
       case "class":
@@ -207,6 +209,34 @@ export class Parser {
     };
   }
 
+  #whileStatement(): ASTNode {
+    this.#eat("while");
+    this.#eat("(");
+
+    const test = this.#expressionStatement(false);
+    this.#eat(")");
+
+    let body: ASTNode | null;
+    switch (this.#lookahead.type) {
+      case "{":
+        this.#eat("{");
+        body = this.#blockStatement("WhileStatement");
+        break;
+      default:
+        body = this.#statement("WhileStatement");
+    }
+
+    if (body == null) {
+      throw new Error("No body in while loop");
+    }
+
+    return {
+      type: "WhileStatement",
+      test,
+      body,
+    };
+  }
+
   #forStatement(): ASTNode {
     this.#eat("for");
     this.#eat("(");
@@ -241,10 +271,7 @@ export class Parser {
         body = this.#blockStatement("ForStatement");
         break;
       default:
-        body = {
-          type: "BlockStatement",
-          body: [this.#statement("ForStatement")],
-        };
+        body = this.#statement("ForStatement");
     }
 
     if (body == null) {
