@@ -1,11 +1,12 @@
 import { Tokenizer } from "./tokenizer";
-import { ASTNode, ASTNodeType, Operator, Token, TokenType } from "./types";
+import { ASTNode, Operator, Token, TokenType } from "./types";
 import { astFactory } from "../helpers/ast-factory";
 import errorMessage from "../helpers/error-message";
 
 export class Parser {
   #tokenizer: Tokenizer;
   #lookahead: Token;
+  #canReturn = false;
 
   constructor(str: string) {
     this.#tokenizer = new Tokenizer(str);
@@ -17,10 +18,10 @@ export class Parser {
   }
 
   #program(): ASTNode {
-    return astFactory(this.#statementList("Program"));
+    return astFactory(this.#statementList());
   }
 
-  #statementList(type: ASTNodeType, block = false): (ASTNode | null)[] {
+  #statementList(block = false): (ASTNode | null)[] {
     const statements: (ASTNode | null)[] = [];
 
     if (block && this.#lookahead.type === "}") {
@@ -28,7 +29,7 @@ export class Parser {
       return statements;
     }
 
-    let currentStatement = this.#statement(type);
+    let currentStatement = this.#statement();
 
     if (!currentStatement) {
       return statements;
@@ -40,19 +41,19 @@ export class Parser {
         this.#eat("}");
         return statements;
       }
-      currentStatement = this.#statement(type);
+      currentStatement = this.#statement();
     } while ((!block && currentStatement) || block);
 
     return statements;
   }
 
-  #statement(type: ASTNodeType): ASTNode | null {
+  #statement(): ASTNode | null {
     switch (this.#lookahead.type) {
       case "EndOfFile":
         return null;
       case "{":
         this.#eat("{");
-        return this.#blockStatement(type);
+        return this.#blockStatement();
       case "VariableDeclaration":
         return this.#variableDeclaration();
       case "if":
@@ -66,7 +67,7 @@ export class Parser {
       case "while":
         return this.#whileStatement();
       case "return":
-        return this.#returnStatement(type);
+        return this.#returnStatement();
       case "class":
         return this.#classDeclaration();
       default:
@@ -190,13 +191,8 @@ export class Parser {
     };
   }
 
-  #returnStatement(type: ASTNodeType): ASTNode {
-    if (
-      type !== "FunctionDeclaration" &&
-      type !== "ArrowFunctionExpression" &&
-      type !== "FunctionExpression" &&
-      type !== "ClassMethodDefinition"
-    ) {
+  #returnStatement(): ASTNode {
+    if (!this.#canReturn) {
       throw new Error(errorMessage.INVALID_RETURN_STATEMENT);
     }
 
@@ -220,10 +216,10 @@ export class Parser {
     switch (this.#lookahead.type) {
       case "{":
         this.#eat("{");
-        body = this.#blockStatement("WhileStatement");
+        body = this.#blockStatement();
         break;
       default:
-        body = this.#statement("WhileStatement");
+        body = this.#statement();
     }
 
     if (body == null) {
@@ -286,10 +282,10 @@ export class Parser {
     switch (this.#lookahead.type) {
       case "{":
         this.#eat("{");
-        body = this.#blockStatement("ForStatement");
+        body = this.#blockStatement();
         break;
       default:
-        body = this.#statement("ForStatement");
+        body = this.#statement();
     }
 
     if (body == null) {
@@ -344,8 +340,10 @@ export class Parser {
     const id = this.#identifier();
     const params = this.#functionParams();
 
+    this.#canReturn = true;
     this.#eat("{");
-    const body = this.#blockStatement("FunctionDeclaration");
+    const body = this.#blockStatement();
+    this.#canReturn = false;
     return {
       type: "FunctionDeclaration",
       id,
@@ -358,8 +356,10 @@ export class Parser {
 
   #functionExpression(isAsync: boolean, isGenerator: boolean): ASTNode {
     const params = this.#functionParams();
+    this.#canReturn = true;
     this.#eat("{");
-    const body = this.#blockStatement("FunctionExpression");
+    const body = this.#blockStatement();
+    this.#canReturn = false;
     return {
       type: "FunctionExpression",
       params,
@@ -419,7 +419,7 @@ export class Parser {
 
     if (this.#lookahead.type === "{") {
       this.#eat("{");
-      const body = this.#blockStatement("IfStatement");
+      const body = this.#blockStatement();
       return {
         type: "IfStatement",
         condition,
@@ -427,7 +427,7 @@ export class Parser {
       };
     }
 
-    const body = this.#statement("IfStatement");
+    const body = this.#statement();
     return {
       type: "IfStatement",
       condition,
@@ -438,10 +438,10 @@ export class Parser {
     };
   }
 
-  #blockStatement(type: ASTNodeType): ASTNode {
+  #blockStatement(): ASTNode {
     return {
       type: "BlockStatement",
-      body: this.#statementList(type, true),
+      body: this.#statementList(true),
     };
   }
 
@@ -754,17 +754,20 @@ export class Parser {
   #arrowFunction(params: ASTNode[], isAsync = false): ASTNode {
     this.#eat("=>");
     let body: ASTNode;
+
+    this.#canReturn = true;
     if (this.#lookahead.type === "{") {
       this.#eat("{");
-      body = this.#blockStatement("ArrowFunctionExpression");
+      body = this.#blockStatement();
     } else {
       body = this.#sequenceExpression();
     }
+    this.#canReturn = false;
 
     return {
       type: "ArrowFunctionExpression",
-      body,
       params,
+      body,
       generator: false,
       async: isAsync,
     };
