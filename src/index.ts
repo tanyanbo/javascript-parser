@@ -1,11 +1,7 @@
 import { Parser } from "./parser";
 
 const str = `
-      class Person {
-        #age
-        static name
-        async #greet() {}
-      }
+const p = new Person(a, 1)
   `;
 
 const parser = new Parser(str);

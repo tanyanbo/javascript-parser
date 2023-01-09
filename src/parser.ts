@@ -616,6 +616,22 @@ export class Parser {
       };
     }
 
+    return this.#newExpression();
+  }
+
+  #newExpression(): ASTNode {
+    if (this.#lookahead.type === "new") {
+      this.#eat("new");
+      const callee = this.#leftHandSideExpression();
+      const args = this.#functionArguments();
+
+      return {
+        type: "NewExpression",
+        callee,
+        arguments: args,
+      };
+    }
+
     return this.#parenthesizedExpression();
   }
 
@@ -765,6 +781,10 @@ export class Parser {
         return this.#stringLiteral();
       case "boolean":
         return this.#booleanLiteral();
+      case "null":
+        return this.#nullLiteral();
+      case "undefined":
+        return this.#undefinedLiteral();
       case "[":
         return this.#arrayLiteral();
       case "{":
@@ -807,6 +827,24 @@ export class Parser {
     return {
       type: "BooleanLiteral",
       value: Boolean(node.value),
+    };
+  }
+
+  #nullLiteral(): ASTNode {
+    this.#eat("null");
+
+    return {
+      type: "NullLiteral",
+      value: null,
+    };
+  }
+
+  #undefinedLiteral(): ASTNode {
+    this.#eat("undefined");
+
+    return {
+      type: "UndefinedLiteral",
+      value: undefined,
     };
   }
 
@@ -939,20 +977,7 @@ export class Parser {
 
   #maybeCallExpression(callee: ASTNode): ASTNode | null {
     if (this.#lookahead.type === "(") {
-      this.#eat("(");
-      const args: ASTNode[] = [];
-      // @ts-ignore
-      while (this.#lookahead.type !== ")") {
-        args.push(this.#assignmentExpression());
-        // @ts-ignore
-        if (this.#lookahead.type === ",") {
-          this.#eat(",");
-        }
-      }
-      this.#eat(")");
-      if (this.#lookahead.type === ";") {
-        this.#eat(";");
-      }
+      const args = this.#functionArguments();
 
       const callExpressionNode: ASTNode = {
         type: "CallExpression",
@@ -968,6 +993,25 @@ export class Parser {
     }
 
     return null;
+  }
+
+  #functionArguments(): ASTNode[] {
+    this.#eat("(");
+    const args: ASTNode[] = [];
+    while (this.#lookahead.type !== ")") {
+      args.push(this.#assignmentExpression());
+      if (this.#lookahead.type === ",") {
+        this.#eat(",");
+      }
+    }
+    this.#eat(")");
+
+    // @ts-ignore
+    if (this.#lookahead.type === ";") {
+      this.#eat(";");
+    }
+
+    return args;
   }
 
   #identifier(): ASTNode {

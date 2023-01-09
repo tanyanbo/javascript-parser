@@ -40,6 +40,9 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\bclass\b/d, "class"],
   [/^\bstatic\b/d, "static"],
   [/^\bextends\b/d, "extends"],
+  [/^\bnull\b/d, "null"],
+  [/^\bundefined\b/d, "undefined"],
+  [/^\bnew\b/d, "new"],
   [/^[a-zA-Z_]\w*/d, "Identifier"],
 ];
 

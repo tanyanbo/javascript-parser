@@ -1,6 +1,8 @@
 export type TokenType =
   | "number"
   | "string"
+  | "null"
+  | "undefined"
   | "EndOfFile"
   | ";"
   | "{"
@@ -38,6 +40,7 @@ export type TokenType =
   | "class"
   | "extends"
   | "static"
+  | "new"
   | null;
 
 export interface Token {
@@ -49,6 +52,8 @@ export type ASTNodeType =
   | "NumericLiteral"
   | "StringLiteral"
   | "BooleanLiteral"
+  | "NullLiteral"
+  | "UndefinedLiteral"
   | "ArrayLiteral"
   | "ObjectLiteral"
   | "Property"
@@ -67,6 +72,7 @@ export type ASTNodeType =
   | "SequenceExpression"
   | "ArrowFunctionExpression"
   | "FunctionExpression"
+  | "NewExpression"
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
@@ -105,7 +111,7 @@ export type Operator =
 
 export interface ASTNode {
   type: ASTNodeType;
-  value?: string | number | boolean | ASTNode;
+  value?: string | number | boolean | ASTNode | null | undefined;
   body?: (ASTNode | null)[] | ASTNode;
   operator?: Operator;
   left?: ASTNode;

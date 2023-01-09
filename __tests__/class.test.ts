@@ -586,4 +586,110 @@ describe("class", () => {
       ])
     );
   });
+
+  it("should parse a new expression without arguments correctly", () => {
+    const parser = new Parser(`
+      const p = new Person()
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "p",
+          },
+          value: {
+            type: "NewExpression",
+            callee: {
+              type: "Identifier",
+              name: "Person",
+            },
+            arguments: [],
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
+
+  it("should parse a new expression with member expression without arguments correctly", () => {
+    const parser = new Parser(`
+      const p = new Person.Student()
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "p",
+          },
+          value: {
+            type: "NewExpression",
+            callee: {
+              type: "MemberExpression",
+              object: {
+                type: "Identifier",
+                name: "Person",
+              },
+              property: {
+                type: "Identifier",
+                name: "Student",
+              },
+              computed: false,
+            },
+            arguments: [],
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
+
+  it("should parse a new expression with multiple arguments correctly", () => {
+    const parser = new Parser(`
+      const p = new Person.Student(a, 1)
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "p",
+          },
+          value: {
+            type: "NewExpression",
+            callee: {
+              type: "MemberExpression",
+              object: {
+                type: "Identifier",
+                name: "Person",
+              },
+              property: {
+                type: "Identifier",
+                name: "Student",
+              },
+              computed: false,
+            },
+            arguments: [
+              {
+                type: "Identifier",
+                name: "a",
+              },
+              {
+                type: "NumericLiteral",
+                value: 1,
+              },
+            ],
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
 });
