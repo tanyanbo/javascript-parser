@@ -47,7 +47,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\btry\b/d, "try"],
   [/^\bcatch\b/d, "catch"],
   [/^\bfinally\b/d, "finally"],
-  [/^\bfunction\s*\b\*/d, "function*"],
+  [/^function\s*\*/d, "function*"],
   [/^\bfunction\b/d, "function"],
   [/^\breturn\b/d, "return"],
   [/^(?:\btrue\b|\bfalse\b)/d, "boolean"],
