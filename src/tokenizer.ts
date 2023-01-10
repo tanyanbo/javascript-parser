@@ -31,6 +31,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\bof\b/d, "of"],
   [/^\bfor\b/d, "for"],
   [/^\bwhile\b/d, "while"],
+  [/^\bdo\b/d, "do"],
   [/^\bcontinue\b/d, "continue"],
   [/^\basync\b/d, "async"],
   [/^\bawait\b/d, "await"],

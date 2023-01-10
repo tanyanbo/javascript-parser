@@ -66,6 +66,8 @@ export class Parser {
         return this.#forStatement();
       case "while":
         return this.#whileStatement();
+      case "do":
+        return this.#doWhileStatement();
       case "continue":
         return this.#continueStatement();
       case "return":
@@ -306,6 +308,25 @@ export class Parser {
       type: "WhileStatement",
       test,
       body,
+    };
+  }
+
+  #doWhileStatement(): ASTNode {
+    this.#eat("do");
+    this.#eat("{");
+    const body = this.#blockStatement().body;
+    this.#eat("while");
+    this.#eat("(");
+    const test = this.#expressionStatement(false);
+    this.#eat(")");
+
+    return {
+      type: "DoWhileStatement",
+      body: {
+        type: "BlockStatement",
+        body,
+      },
+      test,
     };
   }
 
