@@ -16,7 +16,12 @@ export type TokenType =
   | ","
   | ":"
   | "#"
+  | "|"
+  | "&"
+  | "^"
   | "=>"
+  | "&&"
+  | "||"
   | "function"
   | "function*"
   | "yield"
@@ -59,7 +64,7 @@ export interface Token {
 
 export type ASTNodeType =
   | "NumericLiteral"
-  | "BigIntLiteral"
+  | "BigintLiteral"
   | "StringLiteral"
   | "BooleanLiteral"
   | "NullLiteral"
@@ -90,6 +95,7 @@ export type ASTNodeType =
   | "FunctionExpression"
   | "NewExpression"
   | "ThisExpression"
+  | "LogicalExpression"
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
@@ -124,7 +130,12 @@ export type Operator =
   | "!="
   | "==="
   | "!=="
-  | "=>";
+  | "=>"
+  | "&&"
+  | "||"
+  | "|"
+  | "&"
+  | "^";
 
 export interface ASTNode {
   type: ASTNodeType;

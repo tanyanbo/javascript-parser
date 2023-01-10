@@ -218,4 +218,66 @@ describe("binary expression", () => {
       ])
     );
   });
+
+  it("should parse binary expression with bitwise or operator correctly", () => {
+    const parser = new Parser(`
+      2 | 5
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "BinaryExpression",
+          left: {
+            type: "NumericLiteral",
+            value: 2,
+          },
+          operator: "|",
+          right: {
+            type: "NumericLiteral",
+            value: 5,
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse binary expression with bitwise or, xor and and operators correctly", () => {
+    const parser = new Parser(`
+      2 | 5 & 10 ^ 5
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "BinaryExpression",
+          left: {
+            type: "NumericLiteral",
+            value: 2,
+          },
+          operator: "|",
+          right: {
+            type: "BinaryExpression",
+            left: {
+              type: "BinaryExpression",
+              left: {
+                type: "NumericLiteral",
+                value: 5,
+              },
+              operator: "&",
+              right: {
+                type: "NumericLiteral",
+                value: 10,
+              },
+            },
+            operator: "^",
+            right: {
+              type: "NumericLiteral",
+              value: 5,
+            },
+          },
+        },
+      ])
+    );
+  });
 });

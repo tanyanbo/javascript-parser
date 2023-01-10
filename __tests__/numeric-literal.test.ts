@@ -40,7 +40,7 @@ describe("numeric literal", () => {
     expect(ast).toEqual(
       astFactory([
         {
-          type: "BigIntLiteral",
+          type: "BigintLiteral",
           value: 20,
         },
       ])

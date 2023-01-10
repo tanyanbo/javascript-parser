@@ -661,7 +661,7 @@ export class Parser {
   }
 
   #assignmentExpression(): ASTNode {
-    let id = this.#equalityExpression();
+    let id = this.#logicalOrExpression();
 
     if (
       this.#lookahead.type === "AssignmentOperator" ||
@@ -689,6 +689,43 @@ export class Parser {
 
   #checkIsValidLeftHandSide(left: ASTNode): boolean {
     return left.type === "Identifier" || left.type === "MemberExpression";
+  }
+
+  #logicalOrExpression(): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#logicalAndExpression.bind(this),
+      lookaheadType: "||",
+      type: "LogicalExpression",
+    });
+  }
+
+  #logicalAndExpression(): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#bitwiseOrExpression.bind(this),
+      lookaheadType: "&&",
+      type: "LogicalExpression",
+    });
+  }
+
+  #bitwiseOrExpression(): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#bitwiseXorExpression.bind(this),
+      lookaheadType: "|",
+    });
+  }
+
+  #bitwiseXorExpression(): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#bitwiseAndExpression.bind(this),
+      lookaheadType: "^",
+    });
+  }
+
+  #bitwiseAndExpression(): ASTNode {
+    return this.#binaryExpression({
+      expression: this.#equalityExpression.bind(this),
+      lookaheadType: "&",
+    });
   }
 
   #equalityExpression(): ASTNode {
@@ -727,8 +764,11 @@ export class Parser {
   }
 
   #unaryExpression(): ASTNode {
-    if (this.#lookahead.type === "UnaryOperator") {
-      const operator = this.#eat("UnaryOperator").value as Operator;
+    if (
+      this.#lookahead.type === "UnaryOperator" ||
+      this.#lookahead.type === "AdditiveOperator"
+    ) {
+      const operator = this.#eat(this.#lookahead.type).value as Operator;
       const argument = this.#unaryExpression();
       return {
         type: "UnaryExpression",
@@ -882,13 +922,19 @@ export class Parser {
     expression,
     lookaheadType,
     args,
+    type,
   }: {
     expression: (...args: any[]) => ASTNode;
     lookaheadType: TokenType;
     args?: any[];
+    type?: "BinaryExpression" | "LogicalExpression";
   }) {
     if (args == null) {
       args = [];
+    }
+
+    if (type == null) {
+      type = "BinaryExpression";
     }
 
     let left = expression(...args);
@@ -897,7 +943,7 @@ export class Parser {
       const operator = this.#eat(lookaheadType).value as Operator;
       const right = expression(...args);
       left = {
-        type: "BinaryExpression",
+        type,
         left,
         operator,
         right,
@@ -911,7 +957,7 @@ export class Parser {
       case "number":
         return this.#numericLiteral();
       case "bigint":
-        return this.#bigIntLiteral();
+        return this.#bigintLiteral();
       case "string":
         return this.#stringLiteral();
       case "boolean":
@@ -948,11 +994,11 @@ export class Parser {
     };
   }
 
-  #bigIntLiteral(): ASTNode {
+  #bigintLiteral(): ASTNode {
     const node = this.#eat("bigint");
 
     return {
-      type: "BigIntLiteral",
+      type: "BigintLiteral",
       value: +node.value.slice(0, -1),
     };
   }
