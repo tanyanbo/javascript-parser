@@ -1,5 +1,6 @@
 export type TokenType =
   | "number"
+  | "bigint"
   | "string"
   | "null"
   | "undefined"
@@ -58,6 +59,7 @@ export interface Token {
 
 export type ASTNodeType =
   | "NumericLiteral"
+  | "BigIntLiteral"
   | "StringLiteral"
   | "BooleanLiteral"
   | "NullLiteral"

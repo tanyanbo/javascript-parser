@@ -31,4 +31,19 @@ describe("numeric literal", () => {
       ])
     );
   });
+
+  it("should parse a bigint literal correctly", () => {
+    const parser = new Parser(`
+      20n
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "BigIntLiteral",
+          value: 20,
+        },
+      ])
+    );
+  });
 });

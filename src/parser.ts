@@ -910,6 +910,8 @@ export class Parser {
     switch (this.#lookahead.type) {
       case "number":
         return this.#numericLiteral();
+      case "bigint":
+        return this.#bigIntLiteral();
       case "string":
         return this.#stringLiteral();
       case "boolean":
@@ -943,6 +945,15 @@ export class Parser {
     return {
       type: "NumericLiteral",
       value: +node.value,
+    };
+  }
+
+  #bigIntLiteral(): ASTNode {
+    const node = this.#eat("bigint");
+
+    return {
+      type: "BigIntLiteral",
+      value: +node.value.slice(0, -1),
     };
   }
 

@@ -2,6 +2,7 @@ import { Token, TokenType } from "./types";
 
 const tokenTypes: [RegExp, TokenType][] = [
   [/^\s+/d, null],
+  [/^\d+n/d, "bigint"],
   [/^\d+/d, "number"],
   [/^'.*'/d, "string"],
   [/^".*"/d, "string"],
