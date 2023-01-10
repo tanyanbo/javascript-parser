@@ -29,6 +29,9 @@ export type TokenType =
   | "continue"
   | "this"
   | "throw"
+  | "try"
+  | "catch"
+  | "finally"
   | "SquareBrackets"
   | "UnaryOperator"
   | "AdditiveOperator"
@@ -68,6 +71,8 @@ export type ASTNodeType =
   | "ReturnStatement"
   | "ContinueStatement"
   | "ThrowStatement"
+  | "TryStatement"
+  | "CatchClause"
   | "BinaryExpression"
   | "UnaryExpression"
   | "ParenthesizedExpression"
@@ -147,4 +152,8 @@ export interface ASTNode {
   elements?: ASTNode[];
   superClass?: ASTNode;
   static?: boolean;
+  handler?: ASTNode;
+  finalizer?: ASTNode;
+  param?: ASTNode;
+  block?: ASTNode;
 }

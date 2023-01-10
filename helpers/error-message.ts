@@ -4,6 +4,7 @@ const errorMessage = {
   INVALID_FUNCTION_PARAMETERS: "Invalid function parameters",
   INVALID_ASYNC: "Async keyword is not followed by a function declaration",
   INVALID_CLASS_STATEMENT: "Invalid statement in class declaration",
+  MISSING_CATCH_OR_FINALLY: "Missing catch or finally clause",
 };
 
 export default errorMessage;

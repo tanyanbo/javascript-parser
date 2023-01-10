@@ -74,9 +74,75 @@ export class Parser {
         return this.#classDeclaration();
       case "throw":
         return this.#throwStatement();
+      case "try":
+        return this.#tryStatement();
       default:
         return this.#expressionStatement();
     }
+  }
+
+  #tryStatement(): ASTNode {
+    this.#eat("try");
+    this.#eat("{");
+    const tryBlock = this.#blockStatement();
+    let finallyClause: ASTNode | undefined;
+
+    switch (this.#lookahead.type) {
+      case "catch":
+        return this.#catchClause(tryBlock);
+      case "finally":
+        finallyClause = this.#finallyClause();
+        break;
+      default:
+        throw new Error(errorMessage.MISSING_CATCH_OR_FINALLY);
+    }
+
+    return {
+      type: "TryStatement",
+      block: tryBlock,
+      finalizer: finallyClause,
+    };
+  }
+
+  #catchClause(tryBlock: ASTNode): ASTNode {
+    this.#eat("catch");
+    let param: ASTNode | undefined;
+    if (this.#lookahead.type === "(") {
+      this.#eat("(");
+      param = this.#identifier();
+      this.#eat(")");
+    }
+
+    this.#eat("{");
+    const body = this.#blockStatement().body;
+
+    let finallyBlock: ASTNode | undefined;
+    if (this.#lookahead.type === "finally") {
+      finallyBlock = this.#finallyClause();
+    }
+
+    return {
+      type: "TryStatement",
+      block: tryBlock,
+      handler: {
+        type: "CatchClause",
+        param,
+        body: {
+          type: "BlockStatement",
+          body,
+        },
+      },
+      finalizer: finallyBlock,
+    };
+  }
+
+  #finallyClause(): ASTNode {
+    this.#eat("finally");
+    this.#eat("{");
+    return {
+      type: "BlockStatement",
+      body: this.#blockStatement().body,
+    };
   }
 
   #throwStatement(): ASTNode {
