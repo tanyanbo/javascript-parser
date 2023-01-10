@@ -2,12 +2,13 @@ import { Token, TokenType } from "./types";
 
 const tokenTypes: [RegExp, TokenType][] = [
   [/^\s+/d, null],
+  [/^\/\/.*/d, null],
+  [/^\/\*(?:.|\s)*\*\//d, null],
   [/^\d+n/d, "bigint"],
   [/^\d+/d, "number"],
   [/^'.*'/d, "string"],
   [/^".*"/d, "string"],
   [/^\/.*[^\\]\/[a-z]*/d, "regex"],
-  [/\/\/[a-z]*/d, "regex"],
   [/^;/d, ";"],
   [/^\{/d, "{"],
   [/^}/d, "}"],
@@ -76,7 +77,9 @@ export class Tokenizer {
   getNextToken(): Token {
     this.#string = this.#string.slice(this.#cursor);
 
-    for (const tokenType of tokenTypes) {
+    let idx = 0;
+    while (idx < tokenTypes.length) {
+      const tokenType = tokenTypes[idx];
       const result = tokenType[0].exec(this.#string);
       if (result?.index === 0) {
         // @ts-ignore
@@ -84,6 +87,7 @@ export class Tokenizer {
 
         if (tokenType[1] == null) {
           this.#string = this.#string.slice(this.#cursor);
+          idx = 0;
           continue;
         }
 
@@ -92,6 +96,8 @@ export class Tokenizer {
           value: result[0],
         };
       }
+
+      idx++;
     }
 
     if (this.isEndOfFile()) {

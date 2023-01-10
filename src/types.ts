@@ -110,6 +110,8 @@ export type ASTNodeType =
   | "AssignmentPattern"
   | "CallExpression"
   | "IfStatement"
+  | "CommentLine"
+  | "CommentBlock"
   | "Program";
 
 export type Operator =

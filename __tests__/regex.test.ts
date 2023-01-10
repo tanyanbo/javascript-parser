@@ -19,22 +19,6 @@ describe("regex", () => {
     );
   });
 
-  it("should parse an empty regex expression correctly", () => {
-    const parser = new Parser(`
-      //
-    `);
-    const ast = parser.parse();
-    expect(ast).toEqual(
-      astFactory([
-        {
-          type: "RegExpLiteral",
-          pattern: "",
-          flags: "",
-        },
-      ])
-    );
-  });
-
   it("should parse a regex with flags correctly", () => {
     const parser = new Parser(`
       /aa/id
