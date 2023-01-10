@@ -5,6 +5,7 @@ const errorMessage = {
   INVALID_ASYNC: "Async keyword is not followed by a function declaration",
   INVALID_CLASS_STATEMENT: "Invalid statement in class declaration",
   MISSING_CATCH_OR_FINALLY: "Missing catch or finally clause",
+  INVALID_REGEX_FLAG: "Invalid regular expression flag",
 };
 
 export default errorMessage;

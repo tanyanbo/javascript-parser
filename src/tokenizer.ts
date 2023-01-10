@@ -6,6 +6,8 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\d+/d, "number"],
   [/^'.*'/d, "string"],
   [/^".*"/d, "string"],
+  [/^\/.*[^\\]\/[a-z]*/d, "regex"],
+  [/\/\/[a-z]*/d, "regex"],
   [/^;/d, ";"],
   [/^\{/d, "{"],
   [/^}/d, "}"],

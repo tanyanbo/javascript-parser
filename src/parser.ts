@@ -960,6 +960,8 @@ export class Parser {
         return this.#bigintLiteral();
       case "string":
         return this.#stringLiteral();
+      case "regex":
+        return this.#regexLiteral();
       case "boolean":
         return this.#booleanLiteral();
       case "null":
@@ -1009,6 +1011,25 @@ export class Parser {
     return {
       type: "StringLiteral",
       value: node.value.slice(1, -1),
+    };
+  }
+
+  #regexLiteral(): ASTNode {
+    const validFlags = ["i", "g", "m", "s", "u", "y", "d"];
+    let pattern = this.#eat("regex").value;
+    const lastForwardSlashIndex = pattern.lastIndexOf("/");
+    const flags = pattern.slice(lastForwardSlashIndex + 1);
+
+    if (flags.split("").some((char) => !validFlags.includes(char))) {
+      throw new Error(errorMessage.INVALID_REGEX_FLAG);
+    }
+
+    pattern = pattern.slice(1, lastForwardSlashIndex);
+
+    return {
+      type: "RegExpLiteral",
+      pattern: pattern,
+      flags,
     };
   }
 

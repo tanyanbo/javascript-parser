@@ -2,6 +2,7 @@ export type TokenType =
   | "number"
   | "bigint"
   | "string"
+  | "regex"
   | "null"
   | "undefined"
   | "EndOfFile"
@@ -71,6 +72,7 @@ export type ASTNodeType =
   | "UndefinedLiteral"
   | "ArrayLiteral"
   | "ObjectLiteral"
+  | "RegExpLiteral"
   | "Property"
   | "BlockStatement"
   | "ForStatement"
@@ -171,4 +173,6 @@ export interface ASTNode {
   finalizer?: ASTNode;
   param?: ASTNode;
   block?: ASTNode;
+  pattern?: string;
+  flags?: string;
 }
