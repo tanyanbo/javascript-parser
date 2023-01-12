@@ -22,7 +22,7 @@ export type TokenType =
   | "^"
   | "=>"
   | "&&"
-  | "||"
+  | "LogicalOrAndNullishCoalescing"
   | "function"
   | "function*"
   | "yield"
@@ -137,6 +137,7 @@ export type Operator =
   | "=>"
   | "&&"
   | "||"
+  | "??"
   | "|"
   | "&"
   | "^";

@@ -22,7 +22,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^#/d, "#"],
   [/^=>/d, "=>"],
   [/^&&/d, "&&"],
-  [/^\|\|/d, "||"],
+  [/^(?:\|\||\?\?)/d, "LogicalOrAndNullishCoalescing"],
   [/^\|/d, "|"],
   [/^&/d, "&"],
   [/^\^/d, "^"],

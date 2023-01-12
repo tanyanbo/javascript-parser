@@ -694,7 +694,7 @@ export class Parser {
   #logicalOrExpression(): ASTNode {
     return this.#binaryExpression({
       expression: this.#logicalAndExpression.bind(this),
-      lookaheadType: "||",
+      lookaheadType: "LogicalOrAndNullishCoalescing",
       type: "LogicalExpression",
     });
   }
