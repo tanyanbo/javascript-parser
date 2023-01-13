@@ -1190,11 +1190,57 @@ export class Parser {
       if (this.#lookahead.type === "=>") {
         return this.#arrowFunction([identifier]);
       } else if (this.#lookahead.type === "?.") {
-        // TODO: parse optional call expression
+        return this.#leftHandSideOptionalExpression(identifier);
       }
     }
 
     return this.#memberExpression(identifier);
+  }
+
+  #leftHandSideOptionalExpression(leftHandSide: ASTNode): ASTNode {
+    this.#eat("?.");
+    let node: ASTNode = leftHandSide;
+    let property: ASTNode;
+
+    switch (this.#lookahead.type) {
+      case "#":
+        this.#eat("#");
+        property = {
+          type: "PrivateName",
+          id: this.#identifier(),
+        };
+        return {
+          type: "OptionalMemberExpression",
+          object: node,
+          property,
+          computed: false,
+          optional: true,
+        };
+      case "Identifier":
+        property = this.#identifier();
+        return {
+          type: "OptionalMemberExpression",
+          object: node,
+          property,
+          computed: false,
+          optional: true,
+        };
+      case "[":
+        this.#eat("[");
+        property = this.#expressionStatement(false);
+        this.#eat("]");
+        return {
+          type: "OptionalMemberExpression",
+          object: node,
+          property,
+          computed: true,
+          optional: true,
+        };
+      case "(":
+        return this.#maybeCallExpression(leftHandSide, true)!;
+    }
+
+    throw new Error("Invalid token");
   }
 
   #memberExpression(identifier: ASTNode): ASTNode {
@@ -1297,15 +1343,19 @@ export class Parser {
     throw new Error("Unexpected token");
   }
 
-  #maybeCallExpression(callee: ASTNode): ASTNode | null {
+  #maybeCallExpression(callee: ASTNode, isOptional = false): ASTNode | null {
     if (this.#lookahead.type === "(") {
       const args = this.#functionArguments();
 
-      const callExpressionNode: ASTNode = {
-        type: "CallExpression",
+      let callExpressionNode: ASTNode = {
+        type: isOptional ? "OptionalCallExpression" : "CallExpression",
         callee,
         arguments: args,
       };
+
+      if (isOptional) {
+        callExpressionNode = { ...callExpressionNode, optional: true };
+      }
 
       if (
         // @ts-ignore

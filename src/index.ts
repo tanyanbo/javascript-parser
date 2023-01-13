@@ -1,7 +1,7 @@
 import { Parser } from "./parser";
 
 const str = `
-    a()[1].b.c
+    obj?.(1).p(10)
 `;
 
 // const str = `
