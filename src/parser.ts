@@ -519,28 +519,58 @@ export class Parser {
   #ifStatement(): ASTNode {
     this.#eat("if");
     this.#eat("(");
-    const condition = this.#expressionStatement();
+    const test = this.#expressionStatement();
     this.#eat(")");
+    let ifBlock: ASTNode;
 
-    if (this.#lookahead.type === "{") {
-      this.#eat("{");
-      const body = this.#blockStatement();
-      return {
-        type: "IfStatement",
-        condition,
-        body,
-      };
+    ifBlock = {
+      type: "IfStatement",
+      test,
+      consequent: this.#maybeBlock(),
+    };
+
+    let alternate: ASTNode | undefined;
+    if (this.#lookahead.type === "else") {
+      alternate = this.#elseStatement();
     }
 
-    const body = this.#statement();
+    return { ...ifBlock, alternate };
+  }
+
+  #elseStatement(): ASTNode {
+    this.#eat("else");
+
+    if (this.#lookahead.type !== "if") {
+      return this.#maybeBlock();
+    }
+
+    this.#eat("if");
+    this.#eat("(");
+    const test = this.#expressionStatement();
+    this.#eat(")");
+
+    const consequent = this.#maybeBlock();
+    let alternate: ASTNode | undefined;
+    // @ts-ignore
+    if (this.#lookahead.type === "else") {
+      alternate = this.#elseStatement();
+    }
+
     return {
       type: "IfStatement",
-      condition,
-      body: {
-        type: "BlockStatement",
-        body: [body],
-      },
+      test,
+      consequent,
+      alternate,
     };
+  }
+
+  #maybeBlock(): ASTNode {
+    if (this.#lookahead.type === "{") {
+      this.#eat("{");
+      return this.#blockStatement();
+    } else {
+      return this.#expressionStatement();
+    }
   }
 
   #blockStatement(): ASTNode {
@@ -1159,6 +1189,8 @@ export class Parser {
       identifier = this.#identifier();
       if (this.#lookahead.type === "=>") {
         return this.#arrowFunction([identifier]);
+      } else if (this.#lookahead.type === "?.") {
+        // TODO: parse optional call expression
       }
     }
 
@@ -1166,15 +1198,23 @@ export class Parser {
   }
 
   #memberExpression(identifier: ASTNode): ASTNode {
-    if (this.#lookahead.type !== "." && this.#lookahead.type !== "[") {
+    if (
+      this.#lookahead.type !== "." &&
+      this.#lookahead.type !== "[" &&
+      this.#lookahead.type !== "?."
+    ) {
       return identifier;
     }
     let node = identifier;
 
     let property: ASTNode;
-    while (this.#lookahead.type === "." || this.#lookahead.type === "[") {
+    while (
+      this.#lookahead.type === "." ||
+      this.#lookahead.type === "[" ||
+      this.#lookahead.type === "?."
+    ) {
       if (this.#lookahead.type === ".") {
-        this.#eat(".");
+        this.#eat(this.#lookahead.type);
 
         let isPrivate = false;
         // @ts-ignore
@@ -1197,7 +1237,7 @@ export class Parser {
           property,
           computed: false,
         };
-      } else {
+      } else if (this.#lookahead.type === "[") {
         this.#eat("[");
         property = this.#expressionStatement(false);
         this.#eat("]");
@@ -1207,10 +1247,54 @@ export class Parser {
           property,
           computed: true,
         };
+      } else {
+        return this.#optionalMemberExpression(identifier);
       }
     }
 
     return node;
+  }
+
+  #optionalMemberExpression(identifier: ASTNode): ASTNode {
+    this.#eat("?.");
+    let node: ASTNode = identifier;
+
+    if (this.#lookahead.type === "#") {
+      this.#eat("#");
+      const property: ASTNode = {
+        type: "PrivateName",
+        id: this.#identifier(),
+      };
+      return {
+        type: "OptionalMemberExpression",
+        object: node,
+        property,
+        computed: false,
+        optional: true,
+      };
+    } else if (this.#lookahead.type === "Identifier") {
+      const property = this.#identifier();
+      return {
+        type: "OptionalMemberExpression",
+        object: node,
+        property,
+        computed: false,
+        optional: true,
+      };
+    } else if (this.#lookahead.type === "[") {
+      this.#eat("[");
+      const property = this.#expressionStatement(false);
+      this.#eat("]");
+      return {
+        type: "OptionalMemberExpression",
+        object: node,
+        property,
+        computed: true,
+        optional: true,
+      };
+    }
+
+    throw new Error("Unexpected token");
   }
 
   #maybeCallExpression(callee: ASTNode): ASTNode | null {
@@ -1222,6 +1306,17 @@ export class Parser {
         callee,
         arguments: args,
       };
+
+      if (
+        // @ts-ignore
+        this.#lookahead.type === "." ||
+        // @ts-ignore
+        this.#lookahead.type === "?." ||
+        // @ts-ignore
+        this.#lookahead.type === "["
+      ) {
+        return this.#memberExpression(callExpressionNode);
+      }
 
       const maybeCallExpression = this.#maybeCallExpression(callExpressionNode);
       if (maybeCallExpression == null) {

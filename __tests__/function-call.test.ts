@@ -161,4 +161,44 @@ describe("calling a function", () => {
       ])
     );
   });
+
+  it("should parse function calls as the object in a member expression correctly", () => {
+    const parser = new Parser(`
+      test(1).a[1]
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "MemberExpression",
+          object: {
+            type: "MemberExpression",
+            object: {
+              type: "CallExpression",
+              callee: {
+                type: "Identifier",
+                name: "test",
+              },
+              arguments: [
+                {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+              ],
+            },
+            property: {
+              type: "Identifier",
+              name: "a",
+            },
+            computed: false,
+          },
+          property: {
+            type: "NumericLiteral",
+            value: 1,
+          },
+          computed: true,
+        },
+      ])
+    );
+  });
 });

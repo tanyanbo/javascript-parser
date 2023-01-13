@@ -11,11 +11,11 @@ describe("if statement", () => {
       astFactory([
         {
           type: "IfStatement",
-          condition: {
+          test: {
             type: "Identifier",
             name: "x",
           },
-          body: {
+          consequent: {
             type: "BlockStatement",
             body: [],
           },
@@ -34,26 +34,21 @@ describe("if statement", () => {
       astFactory([
         {
           type: "IfStatement",
-          condition: {
+          test: {
             type: "Identifier",
             name: "x",
           },
-          body: {
-            type: "BlockStatement",
-            body: [
-              {
-                type: "AssignmentExpression",
-                id: {
-                  type: "Identifier",
-                  name: "x",
-                },
-                operator: "=",
-                value: {
-                  type: "NumericLiteral",
-                  value: 20,
-                },
-              },
-            ],
+          consequent: {
+            type: "AssignmentExpression",
+            id: {
+              type: "Identifier",
+              name: "x",
+            },
+            operator: "=",
+            value: {
+              type: "NumericLiteral",
+              value: 20,
+            },
           },
         },
       ])
@@ -72,11 +67,11 @@ describe("if statement", () => {
       astFactory([
         {
           type: "IfStatement",
-          condition: {
+          test: {
             type: "Identifier",
             name: "x",
           },
-          body: {
+          consequent: {
             type: "BlockStatement",
             body: [
               {
@@ -119,7 +114,7 @@ describe("if statement", () => {
       astFactory([
         {
           type: "IfStatement",
-          condition: {
+          test: {
             type: "BinaryExpression",
             left: {
               type: "BinaryExpression",
@@ -139,9 +134,120 @@ describe("if statement", () => {
               value: 2,
             },
           },
-          body: {
+          consequent: {
             type: "BlockStatement",
             body: [],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse an else correctly", () => {
+    const parser = new Parser(`
+      if (1 + 1 === 2) {} else {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "IfStatement",
+          test: {
+            type: "BinaryExpression",
+            left: {
+              type: "BinaryExpression",
+              left: {
+                type: "NumericLiteral",
+                value: 1,
+              },
+              operator: "+",
+              right: {
+                type: "NumericLiteral",
+                value: 1,
+              },
+            },
+            operator: "===",
+            right: {
+              type: "NumericLiteral",
+              value: 2,
+            },
+          },
+          consequent: {
+            type: "BlockStatement",
+            body: [],
+          },
+          alternate: {
+            type: "BlockStatement",
+            body: [],
+          },
+        },
+      ])
+    );
+  });
+
+  it("should parse an if else if else statement correctly", () => {
+    const parser = new Parser(`
+      if (1 + 1 === 2) {} else if (1+1<2) {} else {}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "IfStatement",
+          test: {
+            type: "BinaryExpression",
+            left: {
+              type: "BinaryExpression",
+              left: {
+                type: "NumericLiteral",
+                value: 1,
+              },
+              operator: "+",
+              right: {
+                type: "NumericLiteral",
+                value: 1,
+              },
+            },
+            operator: "===",
+            right: {
+              type: "NumericLiteral",
+              value: 2,
+            },
+          },
+          consequent: {
+            type: "BlockStatement",
+            body: [],
+          },
+          alternate: {
+            type: "IfStatement",
+            test: {
+              type: "BinaryExpression",
+              left: {
+                type: "BinaryExpression",
+                left: {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+                operator: "+",
+                right: {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+              },
+              operator: "<",
+              right: {
+                type: "NumericLiteral",
+                value: 2,
+              },
+            },
+            consequent: {
+              type: "BlockStatement",
+              body: [],
+            },
+            alternate: {
+              type: "BlockStatement",
+              body: [],
+            },
           },
         },
       ])

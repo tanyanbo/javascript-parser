@@ -22,6 +22,7 @@ export type TokenType =
   | "^"
   | "=>"
   | "&&"
+  | "?."
   | "LogicalOrAndNullishCoalescing"
   | "function"
   | "function*"
@@ -30,6 +31,7 @@ export type TokenType =
   | "await"
   | "return"
   | "if"
+  | "else"
   | "of"
   | "for"
   | "while"
@@ -98,6 +100,8 @@ export type ASTNodeType =
   | "NewExpression"
   | "ThisExpression"
   | "LogicalExpression"
+  | "OptionalMemberExpression"
+  | "OptionalCallExpression"
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
@@ -140,7 +144,8 @@ export type Operator =
   | "??"
   | "|"
   | "&"
-  | "^";
+  | "^"
+  | "?.";
 
 export interface ASTNode {
   type: ASTNodeType;
@@ -178,4 +183,7 @@ export interface ASTNode {
   block?: ASTNode;
   pattern?: string;
   flags?: string;
+  optional?: boolean;
+  consequent?: ASTNode;
+  alternate?: ASTNode;
 }

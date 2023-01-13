@@ -1,8 +1,7 @@
 import { Parser } from "./parser";
 
 const str = `
-    //aaaa
-    10
+    a()[1].b.c
 `;
 
 // const str = `
