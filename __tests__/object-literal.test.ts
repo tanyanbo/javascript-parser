@@ -62,6 +62,43 @@ describe("object literal", () => {
     );
   });
 
+  it("should parse an object literal with a string literal as the key correctly", () => {
+    const parser = new Parser(`
+      const x = {'2': 1}
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "VariableDeclaration",
+          id: {
+            type: "Identifier",
+            name: "x",
+          },
+          value: {
+            type: "ObjectLiteral",
+            properties: [
+              {
+                type: "Property",
+                key: {
+                  type: "StringLiteral",
+                  value: "2",
+                },
+                value: {
+                  type: "NumericLiteral",
+                  value: 1,
+                },
+                computed: false,
+                method: false,
+              },
+            ],
+          },
+          kind: "const",
+        },
+      ])
+    );
+  });
+
   it("should parse an object literal with multiple entries correctly", () => {
     const parser = new Parser(`
       const x = {a: 1, b: 2}

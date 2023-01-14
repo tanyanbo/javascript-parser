@@ -1195,6 +1195,8 @@ export class Parser {
         key = this.#yieldExpression();
         this.#eat("]");
         isComputed = true;
+      } else if (this.#lookahead.type === "string") {
+        key = this.#stringLiteral();
       } else {
         key = this.#identifier();
       }

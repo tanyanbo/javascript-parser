@@ -1,6 +1,19 @@
 import { Parser } from "./parser";
 
-const str = "`test${a}`";
+const str = `
+  function baseAssignValue(object, key, value) {
+  if (key == '__proto__') {
+    Object.defineProperty(object, key, {
+      'configurable': true,
+      'enumerable': true,
+      'value': value,
+      'writable': true
+    })
+  } else {
+    object[key] = value
+  }
+}
+`;
 
 // const str = `
 // class Tokenizer {
