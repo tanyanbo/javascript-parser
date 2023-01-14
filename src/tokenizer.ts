@@ -20,7 +20,9 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^,/d, ","],
   [/^:/d, ":"],
   [/^#/d, "#"],
+  [/^`/d, "`"],
   [/^=>/d, "=>"],
+  [/^\${/d, "${"],
   [/^&&/d, "&&"],
   [/^(?:\|\||\?\?)/d, "LogicalOrAndNullishCoalescing"],
   [/^\?\./d, "?."],
@@ -45,6 +47,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^\bwhile\b/d, "while"],
   [/^\bdo\b/d, "do"],
   [/^\bcontinue\b/d, "continue"],
+  [/^\bbreak\b/d, "break"],
   [/^\basync\b/d, "async"],
   [/^\bawait\b/d, "await"],
   [/^\byield\b/d, "yield"],
@@ -111,5 +114,45 @@ export class Tokenizer {
     }
 
     throw new SyntaxError(`Unsupported token ${this.#string[0]}`);
+  }
+
+  getTemplateLiteralToken(): Token {
+    this.#string = this.#string.slice(this.#cursor);
+
+    if (this.#string.startsWith("`")) {
+      this.#cursor = 1;
+      return {
+        type: "`",
+        value: "`",
+      };
+    }
+
+    if (this.#string.startsWith("}")) {
+      this.#cursor = 1;
+      return {
+        type: "}",
+        value: "}",
+      };
+    }
+
+    const result = /(?<!\\)\${/d.exec(this.#string);
+
+    if (result == null) {
+      const endingBacktickIndex = /(?<!\\)`/d.exec(this.#string)!.index;
+      this.#cursor = endingBacktickIndex;
+      return {
+        type: "TemplateLiteralString",
+        value: this.#string.slice(0, endingBacktickIndex),
+      };
+    }
+
+    const expressionBeginningIndex = result.index;
+    const templateString = this.#string.slice(0, expressionBeginningIndex);
+    this.#string = this.#string.slice(expressionBeginningIndex);
+    this.#cursor = 2;
+    return {
+      type: "${",
+      value: templateString,
+    };
   }
 }

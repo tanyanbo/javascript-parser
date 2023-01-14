@@ -70,6 +70,8 @@ export class Parser {
         return this.#doWhileStatement();
       case "continue":
         return this.#continueStatement();
+      case "break":
+        return this.#breakStatement();
       case "return":
         return this.#returnStatement();
       case "class":
@@ -400,6 +402,14 @@ export class Parser {
     this.#maybeEatSemicolon();
     return {
       type: "ContinueStatement",
+    };
+  }
+
+  #breakStatement(): ASTNode {
+    this.#eat("break");
+    this.#maybeEatSemicolon();
+    return {
+      type: "BreakStatement",
     };
   }
 
@@ -1006,6 +1016,8 @@ export class Parser {
         return this.#nullLiteral();
       case "undefined":
         return this.#undefinedLiteral();
+      case "`":
+        return this.#templateLiteral();
       case "[":
         return this.#arrayLiteral();
       case "{":
@@ -1018,6 +1030,49 @@ export class Parser {
     }
 
     throw new Error(`Invalid primary expression. Got: ${this.#lookahead.type}`);
+  }
+
+  #templateLiteral(): ASTNode {
+    const expressions: ASTNode[] = [];
+    const quasis: ASTNode[] = [];
+    let nextToken = this.#tokenizer.getTemplateLiteralToken();
+
+    while (nextToken.type !== "`") {
+      switch (nextToken.type) {
+        case "TemplateLiteralString":
+          quasis.push({
+            type: "TemplateElement",
+            value: nextToken.value,
+          });
+          break;
+        case "${":
+          if (nextToken.value) {
+            quasis.push({
+              type: "TemplateElement",
+              value: nextToken.value,
+            });
+          }
+          this.#lookahead = {
+            type: "${",
+            value: "${",
+          };
+          this.#eat("${");
+          expressions.push(this.#expressionStatement(false));
+          break;
+      }
+      nextToken = this.#tokenizer.getTemplateLiteralToken();
+    }
+    this.#lookahead = {
+      type: "`",
+      value: "`",
+    };
+    this.#eat("`");
+
+    return {
+      type: "TemplateLiteral",
+      expressions,
+      quasis,
+    };
   }
 
   #numericLiteral(): ASTNode {

@@ -278,4 +278,40 @@ describe("while loop", () => {
       ])
     );
   });
+
+  it("should parse a break statement correctly", () => {
+    const parser = new Parser(`
+      while (i < 10) {
+        break;
+      }
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "WhileStatement",
+          test: {
+            type: "BinaryExpression",
+            left: {
+              type: "Identifier",
+              name: "i",
+            },
+            operator: "<",
+            right: {
+              type: "NumericLiteral",
+              value: 10,
+            },
+          },
+          body: {
+            type: "BlockStatement",
+            body: [
+              {
+                type: "BreakStatement",
+              },
+            ],
+          },
+        },
+      ])
+    );
+  });
 });

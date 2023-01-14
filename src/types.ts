@@ -20,9 +20,11 @@ export type TokenType =
   | "|"
   | "&"
   | "^"
+  | "`"
   | "=>"
   | "&&"
   | "?."
+  | "${"
   | "LogicalOrAndNullishCoalescing"
   | "IncrementDecrement"
   | "function"
@@ -38,6 +40,7 @@ export type TokenType =
   | "while"
   | "do"
   | "continue"
+  | "break"
   | "this"
   | "throw"
   | "try"
@@ -59,6 +62,7 @@ export type TokenType =
   | "extends"
   | "static"
   | "new"
+  | "TemplateLiteralString"
   | null;
 
 export interface Token {
@@ -76,6 +80,8 @@ export type ASTNodeType =
   | "ArrayLiteral"
   | "ObjectLiteral"
   | "RegExpLiteral"
+  | "TemplateLiteral"
+  | "TemplateElement"
   | "Property"
   | "BlockStatement"
   | "ForStatement"
@@ -84,6 +90,7 @@ export type ASTNodeType =
   | "DoWhileStatement"
   | "ReturnStatement"
   | "ContinueStatement"
+  | "BreakStatement"
   | "ThrowStatement"
   | "TryStatement"
   | "CatchClause"
@@ -191,4 +198,5 @@ export interface ASTNode {
   consequent?: ASTNode;
   alternate?: ASTNode;
   prefix?: boolean;
+  quasis?: ASTNode[];
 }
