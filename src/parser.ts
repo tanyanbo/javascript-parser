@@ -822,13 +822,10 @@ export class Parser {
   #newExpression(): ASTNode {
     if (this.#lookahead.type === "new") {
       this.#eat("new");
-      const callee = this.#leftHandSideExpression();
-      const args = this.#functionArguments();
 
       return {
+        ...this.#leftHandSideExpression(),
         type: "NewExpression",
-        callee,
-        arguments: args,
       };
     }
 
@@ -1004,12 +1001,7 @@ export class Parser {
         return this.#objectLiteral();
       case "this":
       case "Identifier":
-        const lhs = this.#leftHandSideExpression();
-        const maybeCallExpression = this.#maybeCallExpression(lhs);
-        if (maybeCallExpression != null) {
-          return maybeCallExpression;
-        }
-        return lhs;
+        return this.#leftHandSideExpression();
       case "yield":
         return this.#yieldExpression();
     }
@@ -1189,58 +1181,15 @@ export class Parser {
       identifier = this.#identifier();
       if (this.#lookahead.type === "=>") {
         return this.#arrowFunction([identifier]);
-      } else if (this.#lookahead.type === "?.") {
-        return this.#leftHandSideOptionalExpression(identifier);
       }
     }
 
-    return this.#memberExpression(identifier);
-  }
-
-  #leftHandSideOptionalExpression(leftHandSide: ASTNode): ASTNode {
-    this.#eat("?.");
-    let node: ASTNode = leftHandSide;
-    let property: ASTNode;
-
-    switch (this.#lookahead.type) {
-      case "#":
-        this.#eat("#");
-        property = {
-          type: "PrivateName",
-          id: this.#identifier(),
-        };
-        return {
-          type: "OptionalMemberExpression",
-          object: node,
-          property,
-          computed: false,
-          optional: true,
-        };
-      case "Identifier":
-        property = this.#identifier();
-        return {
-          type: "OptionalMemberExpression",
-          object: node,
-          property,
-          computed: false,
-          optional: true,
-        };
-      case "[":
-        this.#eat("[");
-        property = this.#expressionStatement(false);
-        this.#eat("]");
-        return {
-          type: "OptionalMemberExpression",
-          object: node,
-          property,
-          computed: true,
-          optional: true,
-        };
-      case "(":
-        return this.#maybeCallExpression(leftHandSide, true)!;
+    if (this.#lookahead.type === "(") {
+      const callExpression = this.#maybeCallExpression(identifier)!;
+      return this.#memberExpression(callExpression);
     }
 
-    throw new Error("Invalid token");
+    return this.#memberExpression(identifier);
   }
 
   #memberExpression(identifier: ASTNode): ASTNode {
@@ -1294,50 +1243,48 @@ export class Parser {
           computed: true,
         };
       } else {
-        return this.#optionalMemberExpression(identifier);
+        this.#eat("?.");
+        // @ts-ignore
+        if (this.#lookahead.type === "(") {
+          node = this.#maybeCallExpression(node, true)!;
+        } else {
+          const { property, computed } = this.#optionalMemberExpression();
+          node = {
+            type: "OptionalMemberExpression",
+            object: node,
+            property,
+            computed,
+            optional: true,
+          };
+        }
       }
+    }
+
+    if (this.#lookahead.type === "(") {
+      const callExpression = this.#maybeCallExpression(node)!;
+      return this.#memberExpression(callExpression);
     }
 
     return node;
   }
 
-  #optionalMemberExpression(identifier: ASTNode): ASTNode {
-    this.#eat("?.");
-    let node: ASTNode = identifier;
-
+  #optionalMemberExpression(): { property: ASTNode; computed: boolean } {
     if (this.#lookahead.type === "#") {
       this.#eat("#");
-      const property: ASTNode = {
-        type: "PrivateName",
-        id: this.#identifier(),
-      };
       return {
-        type: "OptionalMemberExpression",
-        object: node,
-        property,
+        property: {
+          type: "PrivateName",
+          id: this.#identifier(),
+        },
         computed: false,
-        optional: true,
       };
     } else if (this.#lookahead.type === "Identifier") {
-      const property = this.#identifier();
-      return {
-        type: "OptionalMemberExpression",
-        object: node,
-        property,
-        computed: false,
-        optional: true,
-      };
+      return { property: this.#identifier(), computed: false };
     } else if (this.#lookahead.type === "[") {
       this.#eat("[");
       const property = this.#expressionStatement(false);
       this.#eat("]");
-      return {
-        type: "OptionalMemberExpression",
-        object: node,
-        property,
-        computed: true,
-        optional: true,
-      };
+      return { property, computed: true };
     }
 
     throw new Error("Unexpected token");
@@ -1355,17 +1302,6 @@ export class Parser {
 
       if (isOptional) {
         callExpressionNode = { ...callExpressionNode, optional: true };
-      }
-
-      if (
-        // @ts-ignore
-        this.#lookahead.type === "." ||
-        // @ts-ignore
-        this.#lookahead.type === "?." ||
-        // @ts-ignore
-        this.#lookahead.type === "["
-      ) {
-        return this.#memberExpression(callExpressionNode);
       }
 
       const maybeCallExpression = this.#maybeCallExpression(callExpressionNode);

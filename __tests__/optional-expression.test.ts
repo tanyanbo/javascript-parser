@@ -26,6 +26,39 @@ describe("optional expression", () => {
     );
   });
 
+  it("should parse a chained optional member expression correctly", () => {
+    const parser = new Parser(`
+      obj?.a?.b
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "OptionalMemberExpression",
+          object: {
+            type: "OptionalMemberExpression",
+            object: {
+              type: "Identifier",
+              name: "obj",
+            },
+            property: {
+              type: "Identifier",
+              name: "a",
+            },
+            computed: false,
+            optional: true,
+          },
+          property: {
+            type: "Identifier",
+            name: "b",
+          },
+          computed: false,
+          optional: true,
+        },
+      ])
+    );
+  });
+
   it("should parse an optional computed member expression correctly", () => {
     const parser = new Parser(`
       obj?.[1]
@@ -75,7 +108,7 @@ describe("optional expression", () => {
     );
   });
 
-  it("should parse a chained optional call expression correctly", () => {
+  it("should parse a optional call expression as object in member expression correctly", () => {
     const parser = new Parser(`
       obj?.(1).p(10)
     `);

@@ -201,4 +201,43 @@ describe("calling a function", () => {
       ])
     );
   });
+
+  it("should parse a.b().c() correctly", () => {
+    const parser = new Parser(`
+      a.b().c()
+    `);
+    const ast = parser.parse();
+    expect(ast).toEqual(
+      astFactory([
+        {
+          type: "CallExpression",
+          callee: {
+            type: "MemberExpression",
+            object: {
+              type: "CallExpression",
+              callee: {
+                type: "MemberExpression",
+                object: {
+                  type: "Identifier",
+                  name: "a",
+                },
+                property: {
+                  type: "Identifier",
+                  name: "b",
+                },
+                computed: false,
+              },
+              arguments: [],
+            },
+            property: {
+              type: "Identifier",
+              name: "c",
+            },
+            computed: false,
+          },
+          arguments: [],
+        },
+      ])
+    );
+  });
 });

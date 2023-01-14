@@ -1,7 +1,9 @@
 import { Parser } from "./parser";
 
 const str = `
-    obj?.(1).p(10)
+    // a?.b?.c()?.a()
+    // a.b().c()
+    const p = new Person.Student(a, 1)()
 `;
 
 // const str = `
