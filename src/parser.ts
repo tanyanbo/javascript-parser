@@ -816,6 +816,17 @@ export class Parser {
       };
     }
 
+    if (this.#lookahead.type === "IncrementDecrement") {
+      const operator = this.#eat("IncrementDecrement").value as Operator;
+      const argument = this.#leftHandSideExpression();
+      return {
+        type: "UpdateExpression",
+        operator,
+        prefix: true,
+        argument,
+      };
+    }
+
     return this.#newExpression();
   }
 
@@ -1189,7 +1200,20 @@ export class Parser {
       return this.#memberExpression(callExpression);
     }
 
-    return this.#memberExpression(identifier);
+    const result = this.#memberExpression(identifier);
+
+    if (this.#lookahead.type === "IncrementDecrement") {
+      const operator = this.#eat("IncrementDecrement").value as Operator;
+
+      return {
+        type: "UpdateExpression",
+        operator,
+        prefix: false,
+        argument: result,
+      };
+    }
+
+    return result;
   }
 
   #memberExpression(identifier: ASTNode): ASTNode {

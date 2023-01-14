@@ -33,6 +33,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^(?:===|!==|==|!=)/d, "EqualityOperator"],
   [/^=/d, "AssignmentOperator"],
   [/^[+\-*/]=/d, "ComplexAssignmentOperator"],
+  [/^(?:\+\+|--)/d, "IncrementDecrement"],
   [/^!/d, "UnaryOperator"],
   [/^[+\-]/d, "AdditiveOperator"],
   [/^[*\/]/d, "MultiplicativeOperator"],

@@ -24,6 +24,7 @@ export type TokenType =
   | "&&"
   | "?."
   | "LogicalOrAndNullishCoalescing"
+  | "IncrementDecrement"
   | "function"
   | "function*"
   | "yield"
@@ -102,6 +103,7 @@ export type ASTNodeType =
   | "LogicalExpression"
   | "OptionalMemberExpression"
   | "OptionalCallExpression"
+  | "UpdateExpression"
   | "Identifier"
   | "VariableDeclaration"
   | "FunctionDeclaration"
@@ -123,6 +125,8 @@ export type Operator =
   | "-"
   | "*"
   | "/"
+  | "++"
+  | "--"
   | "!"
   | "**"
   | "="
@@ -186,4 +190,5 @@ export interface ASTNode {
   optional?: boolean;
   consequent?: ASTNode;
   alternate?: ASTNode;
+  prefix?: boolean;
 }
