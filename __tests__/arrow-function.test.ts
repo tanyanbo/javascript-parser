@@ -1,5 +1,5 @@
 import { Parser } from "../src/parser";
-import { astFactory } from "../helpers/ast-factory";
+import { astFactory } from "../src/helpers/ast-factory";
 
 describe("arrow function", () => {
   it("should parse an arrow function with no parameters and no body correctly", () => {

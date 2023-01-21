@@ -1,5 +1,5 @@
 import { Parser } from "../src/parser";
-import { astFactory } from "../helpers/ast-factory";
+import { astFactory } from "../src/helpers/ast-factory";
 
 describe("parenthesized expression", () => {
   it("should parse a parenthesized expression correctly", () => {

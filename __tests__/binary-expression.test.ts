@@ -1,5 +1,5 @@
 import { Parser } from "../src/parser";
-import { astFactory } from "../helpers/ast-factory";
+import { astFactory } from "../src/helpers/ast-factory";
 
 describe("binary expression", () => {
   it("should parse binary expression with plus operator correctly", () => {

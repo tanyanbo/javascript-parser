@@ -1,5 +1,5 @@
 import { Parser } from "../src/parser";
-import { astFactory } from "../helpers/ast-factory";
+import { astFactory } from "../src/helpers/ast-factory";
 
 describe("object literal", () => {
   it("should parse an object literal with no entries correctly", () => {

@@ -1,17 +1,19 @@
 import { Parser } from "./parser";
 
 const str = `
-  function baseAssignValue(object, key, value) {
-  if (key == '__proto__') {
-    Object.defineProperty(object, key, {
-      'configurable': true,
-      'enumerable': true,
-      'value': value,
-      'writable': true
-    })
-  } else {
-    object[key] = value
-  }
+
+/**
+ * Adds the key-value \`pair\` to \`map\`.
+ *
+ * @private
+ * @param {Object} map The map to modify.
+ * @param {Array} pair The key-value pair to add.
+ * @returns {Object} Returns \`map\`.
+ */
+function addMapEntry(map, pair) {
+  // dont return \`map.set\`because
+  map.set(pair[0], pair[1])
+  return map
 }
 `;
 

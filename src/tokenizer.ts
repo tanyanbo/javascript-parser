@@ -38,7 +38,7 @@ const tokenTypes: [RegExp, TokenType][] = [
   [/^(?:\+\+|--)/d, "IncrementDecrement"],
   [/^!/d, "UnaryOperator"],
   [/^[+\-]/d, "AdditiveOperator"],
-  [/^[*\/]/d, "MultiplicativeOperator"],
+  [/^[*/]/d, "MultiplicativeOperator"],
   [/^(?:\blet\b|\bconst\b)/d, "VariableDeclaration"],
   [/^\bif\b/d, "if"],
   [/^\belse\b/d, "else"],

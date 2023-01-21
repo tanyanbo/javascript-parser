@@ -1,6 +1,6 @@
 import { Parser } from "../src/parser";
-import { astFactory } from "../helpers/ast-factory";
-import errorMessage from "../helpers/error-message";
+import { astFactory } from "../src/helpers/ast-factory";
+import errorMessage from "../src/helpers/error-message";
 
 describe("regex", () => {
   it("should parse a regex correctly", () => {

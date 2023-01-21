@@ -1,7 +1,7 @@
 import { Tokenizer } from "./tokenizer";
 import { ASTNode, Operator, Token, TokenType } from "./types";
-import { astFactory } from "../helpers/ast-factory";
-import errorMessage from "../helpers/error-message";
+import { astFactory } from "./helpers/ast-factory";
+import errorMessage from "./helpers/error-message";
 
 export class Parser {
   #tokenizer: Tokenizer;
@@ -1029,7 +1029,9 @@ export class Parser {
         return this.#yieldExpression();
     }
 
-    throw new Error(`Invalid primary expression. Got: ${this.#lookahead.type}`);
+    throw new Error(
+      `Invalid primary expression. Got: ${this.#lookahead.value}`
+    );
   }
 
   #templateLiteral(): ASTNode {

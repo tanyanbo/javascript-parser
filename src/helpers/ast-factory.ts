@@ -1,4 +1,4 @@
-import { ASTNode } from "../src/types";
+import { ASTNode } from "../types";
 
 export function astFactory(body: (ASTNode | null)[]): ASTNode {
   return {
